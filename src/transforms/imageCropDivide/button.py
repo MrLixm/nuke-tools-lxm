@@ -1,5 +1,5 @@
 """
-version=6
+version=2
 author=Liam Collod
 last_modified=24/04/2022
 python>2.7
@@ -10,10 +10,11 @@ dependencies={
 [What]
 
 From given maximum dimensions, divide an input image into multiples crops.
+Must be executed from a python button knob.
 
 [Use]
 
-...
+Must be executed from a python button knob.
 
 [License]
 
@@ -31,8 +32,11 @@ See the License for the specific language governing permissions and
 limitations under the License.
 
 """
+
 import logging
 import math
+import platform
+import subprocess
 import sys
 
 try:
@@ -66,7 +70,10 @@ def setup_logging(name, level):
     return logger
 
 
-logger = setup_logging("imageCropDivide", logging.DEBUG)
+logger = setup_logging("imageCropDivide.button", logging.DEBUG)
+
+PASS_METADATA_PATH = "_nuke/passName"
+"Metadata key name. Used in write nodes for a flexible pass setup."
 
 
 class CropNode:
@@ -253,23 +260,127 @@ class CropGenerator:
         return
 
 
-def __test():
+def register_in_clipboard(data):
     """
-    For testing out of a Nuke context
+    Args:
+        data(str):
     """
 
-    cg = CropGenerator((1920, 1080), (3872, 2592))
-    for cropnode in cg.crops:
-        print(str(cropnode))
-        continue
+    # Check which operating system is running to get the correct copying keyword.
+    if platform.system() == 'Darwin':
+        copy_keyword = 'pbcopy'
+    elif platform.system() == 'Windows':
+        copy_keyword = 'clip'
+    else:
+        raise OSError("Current os not supported. Only [Darwin, Windows]")
 
-    logger.info("[__test] Finished.")
+    subprocess.run(copy_keyword, universal_newlines=True, input=data)
     return
 
 
-if __name__ == '__main__':
+def generate_nk(
+        width_max,
+        height_max,
+        width_source,
+        height_source,
+):
+    """
 
-    if nuke:
-        run()
-    else:
-        __test()
+    Args:
+        width_max(int):
+        height_max(int):
+        width_source(int):
+        height_source(int):
+
+    Returns:
+        str: .nk formatted string representing the nodegraph
+    """
+
+    cg = CropGenerator(
+        (width_max, height_max),
+        (width_source, height_source),
+    )
+
+    out = str()
+    out += """set cut_paste_input [stack 0]
+version 13.1 v3
+push $cut_paste_input\n"""
+
+    id_write_master = None
+
+    for i, cropnode in enumerate(cg.crops):
+
+        pos_x = 125 * i
+        pos_y = 125
+
+        out += "Dot {{\n xpos {}\n ypos {}\n}}\n".format(pos_x, pos_y)
+        id_last = "N173200"
+        out += "set {} [stack 0]\n".format(id_last)
+        pos_y += 125
+
+        # CROPNODE
+        cropnode.reformat = True
+        str_cropnode = str(cropnode)[:-2]  # remove the 2 last character "}\n"
+        str_cropnode += " name Crop_{}_\n".format(cropnode.identifier)
+        str_cropnode += " xpos {}\n ypos {}\n".format(pos_x, pos_y)
+        str_cropnode += "}\n"
+        out += str_cropnode
+        pos_y += 125
+
+        # ModifyMetadata node
+        out += "ModifyMetaData {\n"
+        out += " metadata {{{{set {} {}}}}}\n".format(PASS_METADATA_PATH,
+                                                      cropnode.identifier)
+        out += " xpos {}\n ypos {}\n".format(pos_x, pos_y)
+        out += "}\n"
+        pos_y += 125
+
+        # Write node cloning system
+        if id_write_master:
+            out += "clone ${} {{\n xpos {}\n ypos {}\n}}\n".format(id_write_master,
+                                                                   pos_x, pos_y)
+            pos_y += 125
+        else:
+            id_write_master = "C171d00"
+            out += "clone node7f6100171d00|Write|21972 Write {\n"
+            out += " xpos {}\n ypos {}\n".format(pos_x, pos_y)
+            out += " file \"[metadata {}].jpg\"".format(PASS_METADATA_PATH)
+            out += " file_type jpeg\n _jpeg_quality 1\n _jpeg_sub_sampling 4:4:4\n"
+            out += "}\n"
+            out += "set {} [stack 0]\n".format(id_write_master)
+
+        out += "push ${}\n".format(id_last)
+        continue
+
+    logger.info("[generate_nk] Finished.")
+    return out
+
+
+def run():
+    """
+    """
+    logger.info("[run] Started.")
+
+    width_max = nuke.thisNode()["width_max"].getValue()
+    height_max = nuke.thisNode()["height_max"].getValue()
+    width_source = nuke.thisNode()["width_source"].getValue()
+    height_source = nuke.thisNode()["height_source"].getValue()
+
+    assert width_max, "ValueError: width_max can't be False/None/0"
+    assert height_max, "ValueError: height_max can't be False/None/0"
+    assert width_source, "ValueError: width_source can't be False/None/0"
+    assert height_source, "ValueError: height_source can't be False/None/0"
+
+    nk_str = generate_nk(
+        width_max=width_max,
+        height_max=height_max,
+        width_source=width_source,
+        height_source=height_source,
+    )
+    register_in_clipboard(nk_str)
+
+    logger.info("[run] Finished. Nodegraph copied to clipboard.")
+    return
+
+
+run()

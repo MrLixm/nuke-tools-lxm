@@ -3,6 +3,9 @@ version=1
 author=Liam Collod
 last_modified=24/04/2022
 python>2.7
+dependencies={
+    imageCropDivide=*
+}
 
 [What]
 
@@ -30,18 +33,13 @@ limitations under the License.
 
 """
 import logging
+import os.path
 import sys
 
-try:
-    import nuke
-except:
-    pass
-
-import imageCropDivide
+from imageCropDivide import CropGenerator
 
 
 def setup_logging(name, level):
-
     logger = logging.getLogger(name)
     logger.setLevel(level)
 
@@ -63,25 +61,31 @@ def setup_logging(name, level):
 
 logger = setup_logging("cropAndWrite", logging.DEBUG)
 
-
 PASS_METADATA_PATH = "_nuke/passName"
 "Metadata key name. Used in write nodes for a flexible pass setup."
 
 
-def run():
+def run(
+        width_max,
+        height_max,
+        width_source,
+        height_source,
+        write_nk=False
+):
+    """
 
-    # width_max = nuke.thisNode()["width_max"].getValue()
-    # height_max = nuke.thisNode()["height_max"].getValue()
-    # width_source = nuke.thisNode()["width_source"].getValue()
-    # height_source = nuke.thisNode()["height_source"].getValue()
-    # input_node = nuke.thisNode()["input_node"]
+    Args:
+        width_max(int):
+        height_max(int):
+        width_source(int):
+        height_source(int):
+        write_nk(bool): True to write a .nk file of the created nodegraph
 
-    width_max = 1920
-    height_max = 1080
-    width_source = 3580
-    height_source = 2560
+    Returns:
+        str: .nk formatted string representing the nodegraph
+    """
 
-    cg = imageCropDivide.CropGenerator(
+    cg = CropGenerator(
         (width_max, height_max),
         (width_source, height_source),
     )
@@ -104,9 +108,6 @@ push $cut_paste_input\n"""
         pos_y += 125
 
         # CROPNODE
-        widthi, heighti = cropnode.identifier.split("x")
-        widthi = int(widthi) + 1  # start at 0 so offset
-        heighti = int(heighti) + 1
         cropnode.reformat = True
         str_cropnode = str(cropnode)[:-2]  # remove the 2 last character "}\n"
         str_cropnode += " name Crop_{}_\n".format(cropnode.identifier)
@@ -117,14 +118,16 @@ push $cut_paste_input\n"""
 
         # ModifyMetadata node
         out += "ModifyMetaData {\n"
-        out += " metadata {{{{set {} {}}}}}\n".format(PASS_METADATA_PATH, cropnode.identifier)
+        out += " metadata {{{{set {} {}}}}}\n".format(PASS_METADATA_PATH,
+                                                      cropnode.identifier)
         out += " xpos {}\n ypos {}\n".format(pos_x, pos_y)
         out += "}\n"
         pos_y += 125
 
         # Write node cloning system
         if id_write_master:
-            out += "clone ${} {{\n xpos {}\n ypos {}\n}}\n".format(id_write_master, pos_x, pos_y)
+            out += "clone ${} {{\n xpos {}\n ypos {}\n}}\n".format(id_write_master,
+                                                                   pos_x, pos_y)
             pos_y += 125
         else:
             id_write_master = "C171d00"
@@ -138,15 +141,38 @@ push $cut_paste_input\n"""
         out += "push ${}\n".format(id_last)
         continue
 
-    # Write to nk file
-    path = "nodegraph.nk"
-    with open(path, "w") as f:
-        f.write(out)
-    logger.info("[run] Writed {}.".format(path))
+    if write_nk:
+        write_nk_file(".", "nodegraph", data=out)
 
     logger.info("[run] Finished.")
-    return
+    return out
+
+
+def write_nk_file(target_dir, target_name, data):
+    """
+
+    Args:
+        target_dir(str): must be in an existing directory
+        target_name(str): name of the file without the extension
+        data(str):
+
+    Returns:
+        str: path the file has been written to.
+    """
+    target_path = os.path.join(target_dir, "{}.nk".format(target_name))
+    with open(target_path, "w") as f:
+        f.write(data)
+    logger.info("[write_nk_file] Finished. Wrote {}.".format(target_path))
+
+    return target_path
 
 
 if __name__ == '__main__':
-    run()
+
+    run(
+        width_max=1920,
+        height_max=1080,
+        width_source=3580,
+        height_source=2560,
+        write_nk=True
+    )
