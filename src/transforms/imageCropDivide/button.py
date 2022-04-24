@@ -10,6 +10,7 @@ dependencies={
 [What]
 
 From given maximum dimensions, divide an input image into multiples crops.
+This a combined script of <cropAndWrite> and <imageCropDivide>.
 Must be executed from a python button knob.
 
 [Use]
