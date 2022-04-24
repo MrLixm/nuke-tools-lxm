@@ -1,0 +1,139 @@
+set cut_paste_input [stack 0]
+version 13.1 v3
+push $cut_paste_input
+Dot {
+ xpos 0
+ ypos 125
+}
+set N173200 [stack 0]
+Crop {
+ box {0.0 0.0 1790.0 853.3333333333334}
+ reformat true
+ name Crop_0x0_
+ xpos 0
+ ypos 250
+}
+ModifyMetaData {
+ metadata {{set _nuke/passName 0x0}}
+ xpos 0
+ ypos 375
+}
+clone node7f6100171d00|Write|21972 Write {
+ xpos 0
+ ypos 500
+ file "[metadata _nuke/passName].jpg" file_type jpeg
+ _jpeg_quality 1
+ _jpeg_sub_sampling 4:4:4
+}
+set C171d00 [stack 0]
+push $N173200
+Dot {
+ xpos 125
+ ypos 125
+}
+set N173200 [stack 0]
+Crop {
+ box {0.0 853.3333333333334 1790.0 853.3333333333334}
+ reformat true
+ name Crop_0x1_
+ xpos 125
+ ypos 250
+}
+ModifyMetaData {
+ metadata {{set _nuke/passName 0x1}}
+ xpos 125
+ ypos 375
+}
+clone $C171d00 {
+ xpos 125
+ ypos 500
+}
+push $N173200
+Dot {
+ xpos 250
+ ypos 125
+}
+set N173200 [stack 0]
+Crop {
+ box {0.0 1706.6666666666667 1790.0 853.3333333333333}
+ reformat true
+ name Crop_0x2_
+ xpos 250
+ ypos 250
+}
+ModifyMetaData {
+ metadata {{set _nuke/passName 0x2}}
+ xpos 250
+ ypos 375
+}
+clone $C171d00 {
+ xpos 250
+ ypos 500
+}
+push $N173200
+Dot {
+ xpos 375
+ ypos 125
+}
+set N173200 [stack 0]
+Crop {
+ box {1790.0 0.0 1790.0 853.3333333333334}
+ reformat true
+ name Crop_1x0_
+ xpos 375
+ ypos 250
+}
+ModifyMetaData {
+ metadata {{set _nuke/passName 1x0}}
+ xpos 375
+ ypos 375
+}
+clone $C171d00 {
+ xpos 375
+ ypos 500
+}
+push $N173200
+Dot {
+ xpos 500
+ ypos 125
+}
+set N173200 [stack 0]
+Crop {
+ box {1790.0 853.3333333333334 1790.0 853.3333333333334}
+ reformat true
+ name Crop_1x1_
+ xpos 500
+ ypos 250
+}
+ModifyMetaData {
+ metadata {{set _nuke/passName 1x1}}
+ xpos 500
+ ypos 375
+}
+clone $C171d00 {
+ xpos 500
+ ypos 500
+}
+push $N173200
+Dot {
+ xpos 625
+ ypos 125
+}
+set N173200 [stack 0]
+Crop {
+ box {1790.0 1706.6666666666667 1790.0 853.3333333333333}
+ reformat true
+ name Crop_1x2_
+ xpos 625
+ ypos 250
+}
+ModifyMetaData {
+ metadata {{set _nuke/passName 1x2}}
+ xpos 625
+ ypos 375
+}
+clone $C171d00 {
+ xpos 625
+ ypos 500
+}
+push $N173200
