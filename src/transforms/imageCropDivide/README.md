@@ -18,7 +18,17 @@ into your nuke script, setup it and execute the script button.
 
 ![screenshot of the node in nuke](doc/img/node-img.png)
 
-You can then press ctrl+v to paste the node setup.
+- Set the desired max dimensions and your source size.
+- Click the `Copy ...` button
+- press ctrl+v to paste the node setup in the nodegraph.
+- On any of the Write node, modify the settings for export.
+- Unclone all the Write nodes `(Alt + shift + K)`
+
+_Why is there a ModifyMetadata node ?_
+> This is the only way I found for now to have a different suffix per Write 
+> node and have them cloned at start. I could remove them and set directly the 
+> suffix on each unique Write node but then it would be a pain to modify one setting
+> on all the write nodes.
 
 # Licensing 
 

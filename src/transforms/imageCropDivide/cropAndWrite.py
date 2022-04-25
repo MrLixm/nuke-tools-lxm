@@ -1,5 +1,5 @@
 """
-version=1
+version=2
 author=Liam Collod
 last_modified=24/04/2022
 python>2.7
@@ -61,7 +61,7 @@ def setup_logging(name, level):
 
 logger = setup_logging("cropAndWrite", logging.DEBUG)
 
-PASS_METADATA_PATH = "_nuke/passName"
+PASS_METADATA_PATH = "_crop/passName"
 "Metadata key name. Used in write nodes for a flexible pass setup."
 
 

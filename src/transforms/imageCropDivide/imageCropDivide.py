@@ -1,5 +1,5 @@
 """
-version=6
+version=7
 author=Liam Collod
 last_modified=24/04/2022
 python>2.7
@@ -98,9 +98,12 @@ class CropNode:
         return
 
     def __repr__(self):
-        return "{} : x[{} -> {}] - y[{} -> {}]".format(
+        return "{} : x[{} -> {}] - y[{} -> {}] //// xy[{}, {}] rt[{}, {}]".format(
             super(CropNode, self).__repr__(),
-            self.x_start, self.x_end, self.y_start, self.y_end
+            round(self.x_start, 3), round(self.x_end, 3),
+            round(self.y_start, 3), round(self.y_end, 3),
+            round(self.x, 3), round(self.y, 3),
+            round(self.r, 3), round(self.t, 3)
         )
 
     def __str__(self):
@@ -109,26 +112,26 @@ class CropNode:
             str: node formatted as .nk format
         """
         out = "Crop {\n"
-        out += " box {{{} {} {} {}}}\n".format(self.x, self.y, self.width, self.height)
+        out += " box {{{} {} {} {}}}\n".format(self.x, self.y, self.r, self.t)
         out += " reformat {}\n".format(str(self.reformat).lower())
         out += "}\n"
         return out
 
     @property
-    def width(self):
-        return self.x_end - self.x_start
-
-    @property
-    def height(self):
-        return self.y_end - self.y_start
-
-    @property
-    def x(self):
+    def r(self):
         return self.x_start
 
     @property
-    def y(self):
+    def t(self):
         return self.y_start
+
+    @property
+    def x(self):
+        return self.x_end
+
+    @property
+    def y(self):
+        return self.y_end
 
     def set_name(self, name):
         """
@@ -152,8 +155,8 @@ class CropNode:
 
         self.node["box"].setX(self.x)
         self.node["box"].setY(self.y)
-        self.node["box"].setR(self.width)
-        self.node["box"].setT(self.height)
+        self.node["box"].setR(self.r)
+        self.node["box"].setT(self.t)
         self.node["reformat"].setValue(self.reformat)
 
         return
@@ -163,8 +166,8 @@ class CropGenerator:
     """
 
     Args:
-        max_size(Tuple[int, int]): (width, height)
-        source_size(Tuple[int, int]): (width, height)
+        max_size(Tuple[int, int]): (r, t)
+        source_size(Tuple[int, int]): (r, t)
 
     Attributes:
         width_max:
@@ -221,8 +224,8 @@ class CropGenerator:
 
         if not width_crops_n or not height_crops_n:
             raise RuntimeError(
-                "[_generate_crops] Can't find a number of crop to perform on width({})"
-                " or height({}) for the following setup :\n"
+                "[_generate_crops] Can't find a number of crop to perform on r({})"
+                " or t({}) for the following setup :\n"
                 "max={}x{} ; source={}x{}".format(
                     width_crops_n, height_crops_n, self.width_max, self.height_max,
                     self.width_source, self.height_source
@@ -257,11 +260,15 @@ def __test():
     """
     For testing out of a Nuke context
     """
+    nk = list()
 
     cg = CropGenerator((1920, 1080), (3872, 2592))
     for cropnode in cg.crops:
-        print(str(cropnode))
+        print(repr(cropnode))
+        nk.append(str(cropnode))
         continue
+
+    print("".join(nk))
 
     logger.info("[__test] Finished.")
     return
@@ -269,7 +276,4 @@ def __test():
 
 if __name__ == '__main__':
 
-    if nuke:
-        run()
-    else:
-        __test()
+    __test()
