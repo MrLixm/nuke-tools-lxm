@@ -16,10 +16,22 @@ Else each script should always have a top docstring for documentation.
 
 - i-o
   
-  - [`NodeToText`](./src/i-o/NodeToText) 
+  - [`NodeToText`](src/i-o/NodeToText) 
   
     Convert the selected nodes knobs:values to a .json.
-     
+
+- nodes
+
+  - [`grading`](src/nodes/grading) 
+  
+    Low-level nodes for grading.
+
+- transforms
+
+  - [`imageCropDivide`](src/transforms/imageCropDivide)
+  
+    From given maximum dimensions, divide an input image into multiples crops.
+
 
 ## Licensing
 
