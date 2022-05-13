@@ -35,15 +35,13 @@ Else each script should always have a top docstring for documentation.
 
 ## Licensing
 
-If no LICENSE.md file is clearly specified for a script, OR the _top docstring_ 
-doesn't define a License,
- the script is by default shared under `Creative Commons Attribution
- -NonCommercial-ShareAlike 4.0 International` License.
+Each LICENSE.md found in a directory override the upstream one. So unless
+the directory specify a license, this repo is licensed under Apache 2.0 license.
 
-To view a copy of this license, visit http://creativecommons.org/licenses/by-nc-sa/4.0/ .
+Check [LICENSE.md](LICENSE.md).
 
 
 ## Contact
 
-monsieurlixm@gmail.com
+[monsieurlixm@gmail.com](mailto:monsieurlixm@gmail.com)
 
