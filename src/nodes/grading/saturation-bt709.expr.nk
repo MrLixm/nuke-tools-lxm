@@ -1,0 +1,25 @@
+set cut_paste_input [stack 0]
+version 13.1 v3
+push $cut_paste_input
+Expression {
+ temp_name0 L
+ temp_expr0 wR*r+wG*g+wB*b
+ expr0 L+saturation.r*(r-L)
+ expr1 L+saturation.g*(g-L)
+ expr2 L+saturation.b*(b-L)
+ name ExprSaturation
+ selected true
+ xpos -779
+ ypos -103
+ addUserKnob {20 User}
+ addUserKnob {6 color_rgba_panelDropped l "panel dropped state" +HIDDEN +STARTLINE}
+ addUserKnob {18 saturation}
+ saturation 1
+ addUserKnob {7 wR}
+ wR 0.2126
+ addUserKnob {7 wG}
+ wG 0.7152
+ addUserKnob {7 wB}
+ wB 0.0722
+ addUserKnob {6 color_rgb_panelDropped l "panel dropped state" +HIDDEN +STARTLINE}
+}

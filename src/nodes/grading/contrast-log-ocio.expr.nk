@@ -1,0 +1,23 @@
+set cut_paste_input [stack 0]
+version 13.1 v3
+push $cut_paste_input
+Expression {
+ expr0 "(r-p) * contrast.r + p"
+ expr1 "(g-p) * contrast.g + p"
+ expr2 "(b-p) * contrast.b + p"
+ name contrastLogOcio
+ selected true
+ xpos 170
+ ypos -2
+ addUserKnob {20 User}
+ addUserKnob {19 contrast}
+ contrast 0.66
+ addUserKnob {6 contrast_panelDropped l "panel dropped state" -STARTLINE +HIDDEN}
+ addUserKnob {7 pivot}
+ pivot 0.18
+ addUserKnob {7 p t "actual pivot used"}
+ p {{"0.5 + pivot *0.5"}}
+ addUserKnob {26 "" +STARTLINE}
+ addUserKnob {26 source l "" +STARTLINE T "<h1>Source :</h1>\n<h2>Formula</h2>\n<p><em>src\\OpenColorIO\\ops\\gradingprimary\\GradingPrimaryOpCPU.cpp#L173</em></p>\n<h2>Pivot</h2>\n<p><em>src\\OpenColorIO\\ops\\gradingprimary\\GradingPrimary.cpp#L151</em></p>"}
+ addUserKnob {6 color_rgba_panelDropped l "panel dropped state" +HIDDEN +STARTLINE}
+}

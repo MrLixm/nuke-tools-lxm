@@ -1,0 +1,29 @@
+set cut_paste_input [stack 0]
+version 13.1 v3
+push $cut_paste_input
+Expression {
+ temp_name0 signR
+ temp_expr0 "r<0 ? -1 : 1"
+ temp_name1 signG
+ temp_expr1 "g<0 ? -1 : 1"
+ temp_name2 signB
+ temp_expr2 "b<0 ? -1 : 1"
+ expr0 "pow(abs(r / p),  contrast.r) * p * signR"
+ expr1 "pow(abs(g / p),  contrast.g) * p * signG"
+ expr2 "pow(abs(b / p),  contrast.b) * p * signB"
+ name contrastLinearOcio
+ selected true
+ xpos -128
+ ypos -75
+ addUserKnob {20 User}
+ addUserKnob {19 contrast}
+ contrast 0.5
+ addUserKnob {6 contrast_panelDropped l "panel dropped state" -STARTLINE +HIDDEN}
+ addUserKnob {7 pivot}
+ pivot 0.18
+ addUserKnob {7 p t "actual pivot used"}
+ p {{"0.18 * pow(2, 0.18)"}}
+ addUserKnob {26 ""}
+ addUserKnob {26 source l "" +STARTLINE T "<h1>Source :</h1>\n<h2>Formula</h2>\n<p><em>src\\OpenColorIO\\ops\\gradingprimary\\GradingPrimaryOpCPU.cpp#L180</em></p>\n<h2>Pivot</h2>\n<p><em>src\\OpenColorIO\\ops\\gradingprimary\\GradingPrimary.cpp#L194</em></p>"}
+ addUserKnob {6 color_rgba_panelDropped l "panel dropped state" +HIDDEN +STARTLINE}
+}
