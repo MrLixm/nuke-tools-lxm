@@ -33,40 +33,19 @@ limitations under the License.
 """
 import logging
 import math
-import sys
 
 try:
     from typing import Tuple, List
-except:
+except ImportError:
     pass
 
 try:
     import nuke
-except:
+except ImportError:
     nuke = None
 
 
-def setup_logging(name, level):
-    logger = logging.getLogger(name)
-    logger.setLevel(level)
-
-    if not logger.handlers:
-        # create a file handler
-        handler = logging.StreamHandler(stream=sys.stdout)
-        handler.setLevel(logging.DEBUG)
-        # create a logging format
-        formatter = logging.Formatter(
-            '%(asctime)s - [%(levelname)7s] %(name)30s // %(message)s',
-            datefmt='%H:%M:%S'
-        )
-        handler.setFormatter(formatter)
-        # add the file handler to the logger
-        logger.addHandler(handler)
-
-    return logger
-
-
-logger = setup_logging("imageCropDivide", logging.DEBUG)
+logger = logging.getLogger("imageCropDivide")
 
 
 class CropNode:
@@ -85,7 +64,6 @@ class CropNode:
     """
 
     def __init__(self, x_start, x_end, y_start, y_end, identifier, reformat=False):
-
         self.identifier = identifier
         self.x_start = x_start
         self.x_end = x_end
@@ -100,10 +78,14 @@ class CropNode:
     def __repr__(self):
         return "{} : x[{} -> {}] - y[{} -> {}] //// xy[{}, {}] rt[{}, {}]".format(
             super(CropNode, self).__repr__(),
-            round(self.x_start, 3), round(self.x_end, 3),
-            round(self.y_start, 3), round(self.y_end, 3),
-            round(self.x, 3), round(self.y, 3),
-            round(self.r, 3), round(self.t, 3)
+            round(self.x_start, 3),
+            round(self.x_end, 3),
+            round(self.y_start, 3),
+            round(self.y_end, 3),
+            round(self.x, 3),
+            round(self.y, 3),
+            round(self.r, 3),
+            round(self.t, 3),
         )
 
     def __str__(self):
@@ -151,7 +133,9 @@ class CropNode:
             self.__update = False
             self.node = nuke.createNode("Crop")
             self.__update = True
-            assert self.node, "[CropNode][update] Can't create nuke node {}".format(self)
+            assert self.node, "[CropNode][update] Can't create nuke node {}".format(
+                self
+            )
 
         self.node["box"].setX(self.x)
         self.node["box"].setY(self.y)
@@ -178,7 +162,6 @@ class CropGenerator:
     """
 
     def __init__(self, max_size, source_size):
-
         self.width_max = max_size[0]  # type: int
         self.height_max = max_size[1]  # type: int
         self.width_source = source_size[0]  # type: int
@@ -227,8 +210,12 @@ class CropGenerator:
                 "[_generate_crops] Can't find a number of crop to perform on r({})"
                 " or t({}) for the following setup :\n"
                 "max={}x{} ; source={}x{}".format(
-                    width_crops_n, height_crops_n, self.width_max, self.height_max,
-                    self.width_source, self.height_source
+                    width_crops_n,
+                    height_crops_n,
+                    self.width_max,
+                    self.height_max,
+                    self.width_source,
+                    self.height_source,
                 )
             )
 
@@ -236,19 +223,19 @@ class CropGenerator:
         height_crops = self._get_crop_coordinates(height_crops_n, x=False)
 
         for width_i in range(len(width_crops)):
-
             for height_i in range(len(height_crops)):
-
                 crop = CropNode(
                     x_start=width_crops[width_i][0],
                     y_start=height_crops[height_i][0],
                     x_end=width_crops[width_i][1],
                     y_end=height_crops[height_i][1],
-                    identifier="{}x{}".format(width_i, height_i)
+                    identifier="{}x{}".format(width_i, height_i),
                 )
                 self.crops.append(crop)
                 logger.debug(
-                    "[CropGenerator][_generate_crops] created    {}".format(crop.__repr__())
+                    "[CropGenerator][_generate_crops] created    {}".format(
+                        crop.__repr__()
+                    )
                 )
 
             continue
@@ -256,24 +243,22 @@ class CropGenerator:
         return
 
 
-def __test():
+def test():
     """
     For testing out of a Nuke context
     """
-    nk = list()
+    crop_nodes = []
 
     cg = CropGenerator((1920, 1080), (3872, 2592))
     for cropnode in cg.crops:
-        print(repr(cropnode))
-        nk.append(str(cropnode))
+        logger.info(repr(cropnode))
+        crop_nodes.append(str(cropnode))
         continue
 
-    print("".join(nk))
-
-    logger.info("[__test] Finished.")
+    logger.info("".join(crop_nodes))
+    logger.info("[test] Finished.")
     return
 
 
-if __name__ == '__main__':
-
-    __test()
+if __name__ == "__main__":
+    test()
