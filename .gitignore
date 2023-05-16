@@ -1,4 +1,27 @@
+# Byte-compiled / optimized / DLL files
 __pycache__/
-cache/
-*.pyc
-*desktop.files.json
+*.py[cod]
+*$py.class
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+.hypothesis/
+.pytest_cache/
+
+# PyCharm
+.idea/
+
+# log files
+*.log
+
+# project specific
+poetry.lock
+build/
