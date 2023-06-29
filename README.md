@@ -2,7 +2,7 @@
 
 **Author:** Liam Collod.
 
-Collections of scripting stuff I wrote for Foundry's Nuke software.
+Collections of resources I made for Foundry's Nuke software.
 
 
 ## Utilisation
@@ -25,6 +25,11 @@ Else each script should always have a top docstring for documentation.
   - [`grading`](src/nodes/grading) 
   
     Low-level nodes for grading.
+
+  - [`metadataToCamera`](src/nodes/metadataToCamera) 
+  
+    A custom Nuke node to convert OpenEXR metadata to a Nuke Camera node.
+
 
 - transforms
 

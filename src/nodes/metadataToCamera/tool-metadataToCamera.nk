@@ -1,0 +1,214 @@
+set cut_paste_input [stack 0]
+version 12.2 v5
+push $cut_paste_input
+push 0
+push 0
+Group {
+ inputs 3
+ name metadataToCamera
+ tile_color 0xe22828ff
+ note_font_color 0xefefefff
+ selected true
+ xpos 412
+ ypos -167
+ addUserKnob {20 User l Camera}
+ addUserKnob {26 text_title l "" +STARTLINE T "<h1> Convert EXR metadata to a Camera</h1>"}
+ addUserKnob {26 text_header l "" +STARTLINE T "This is a bake-less gizmo at the cost of using pixel sampling to work. \nThis mean that sometime the camera might not be updated visually."}
+ addUserKnob {26 "" +STARTLINE}
+ addUserKnob {26 text_bake l "" +STARTLINE T "If you need stability you can bake this gizmo to a real camera node:\n"}
+ addUserKnob {26 text_pre_button l "" +STARTLINE T " "}
+ addUserKnob {22 bake l "Bake To Camera" -STARTLINE T "# VERSION = 5\n# python2-3 compatible\n\nimport logging\n\nimport nuke\n\nLOGGER = logging.getLogger(__name__)\n\n\ndef askUserFramerangeAndViews():\n    \"\"\"\n    Open a dialog for the user to specify a frame range and views to use.\n\n    Returns:\n        (tuple[nuke.FrameRange, list[str]]): a FrameRange and a list of views\n    \"\"\"\n    currentFrameStart = nuke.root().firstFrame()\n    currentFrameEnd = nuke.root().lastFrame()\n    result = nuke.getFramesAndViews(\n        \"Specify Frame Range for Baking\",\n        \"{}-{}\".format(currentFrameStart, currentFrameEnd),\n    )\n    views = result[1]  # type: list[str]\n    frameRange = nuke.FrameRange(result[0])\n    return frameRange, views\n\n\ndef getCameraMatrixFromMetadata(node, frame, view):\n    \"\"\"\n\n    Args:\n        node(nuke.Node): node to retrieve metadata from\n        frame(int): frame number to retrieve metadata at\n        view(str): name of the view to retrieve metadata from\n\n    Returns:\n        (nuke.math.Matrix4): nuke Matrix4 instance\n    \"\"\"\n    metadata = node.metadata(\n        key=\"exr/worldToCamera\",\n        time=frame,\n        view=view,\n    )  # type: list[float]\n\n    matrix = nuke.math.Matrix4()\n\n    if metadata and len(metadata) == 16:\n        for index, i in enumerate(metadata):\n            matrix[index] = i\n\n        matrix.transpose()\n        # invert z axis\n        matrix.scale(1, 1, -1)\n        matrix = matrix.inverse()\n\n    else:\n        matrix.makeIdentity()\n\n    return matrix\n\n\ndef bakeCamera(metadataToCameraNode, frameRange, view=\"left\"):\n    \"\"\"\n\n    Args:\n        metadataToCameraNode(nuke.Group): custom gizmo to bake the internal camera\n        frameRange(nuke.FrameRange): nuke FrameRange\n        view(str): name of the view to create the new baked camera for\n\n    Returns:\n        (nuke.Node): the new camera node\n    \"\"\"\n    LOGGER.info(\n        \"Starting bake for {} with frame range={} with view={}\".format(\n            metadataToCameraNode.fullName(), frameRange, view\n        )\n    )\n\n    metadataSource = metadataToCameraNode.input(2)  # type: nuke.Node\n\n    currentCamera = [\n        node for node in metadataToCameraNode.nodes() if \"Camera\" in node.Class()\n    ]\n    if not currentCamera:\n        raise RuntimeError(\n            \"Missing camera in node {} !?\".format(metadataToCameraNode.fullName())\n        )\n    currentCamera = currentCamera[0]\n\n    with metadataToCameraNode.parent():\n        newCamera = nuke.nodes.Camera2(\n            name=\"CameraFromMetadata_{}\".format(view)\n        )  # type: nuke.Node\n\n    newCamera[\"useMatrix\"].setValue(True)\n    for matrixIndex in range(16):\n        newCamera[\"matrix\"].setAnimated(matrixIndex)\n\n    knobToCopy = [\n        \"focal\",\n        \"haperture\",\n        \"vaperture\",\n        \"near\",\n        \"far\",\n        \"fstop\",\n        \"focal_point\",\n    ]\n\n    for frame in frameRange:\n        for knobName in knobToCopy:\n            sourceKnob = currentCamera.knob(knobName)\n            if sourceKnob.isAnimated():\n                newCamera[knobName].setAnimated()\n                newCamera[knobName].setValueAt(sourceKnob.value(), frame)\n            else:\n                newCamera[knobName].setValue(sourceKnob.value())\n\n        cameraMatrix = getCameraMatrixFromMetadata(\n            node=metadataSource,\n            frame=frame,\n            view=view,\n        )\n\n        for matrixIndex in range(16):\n            newCamera.knob(\"matrix\").setValueAt(\n                cameraMatrix[matrixIndex],\n                frame,\n                matrixIndex,\n            )\n\n    return newCamera\n\n\ndef main():\n    import sys\n\n    # in case the root logger has not been configured, else does nothing.\n    logging.basicConfig(\n        level=logging.INFO,\n        format=\"%(levelname)-7s | %(asctime)s [%(name)s]%(message)s\",\n        handlers=[logging.StreamHandler(sys.stdout)],\n    )\n\n    node = nuke.thisNode()\n    frameRange, views = askUserFramerangeAndViews()\n    for view in views:\n        newCamera = bakeCamera(node, frameRange=frameRange, view=view)\n        LOGGER.info(\"Finished bake newCamera={}\".format(newCamera.fullName()))\n\n\nmain()\n"}
+ addUserKnob {26 text_bake_details l "" -STARTLINE T "<p style=\"color: grey;\">(baked camera not udpated if the metadata change)</p>"}
+ addUserKnob {26 "" +STARTLINE}
+ addUserKnob {26 text_diff_notice l "" +STARTLINE T "<p style=\"color: grey;\">Note that the 3 first values under are different to the original camera.<br>\nBut they produce the same result visually.</p>"}
+ addUserKnob {26 "" +STARTLINE}
+ addUserKnob {41 focal l "focal length" T CameraFromMetadata.focal}
+ addUserKnob {41 haperture l "horiz aperture" T CameraFromMetadata.haperture}
+ addUserKnob {41 vaperture l "vert aperture" T CameraFromMetadata.vaperture}
+ addUserKnob {41 win_translate l "window translate" T CameraFromMetadata.win_translate}
+ addUserKnob {41 win_scale l "window scale" T CameraFromMetadata.win_scale}
+ addUserKnob {41 winroll l "window roll" T CameraFromMetadata.winroll}
+ addUserKnob {41 focal_point l "focal distance" T CameraFromMetadata.focal_point}
+ addUserKnob {41 fstop T CameraFromMetadata.fstop}
+ addUserKnob {20 local_matrix_grp l "Local Matrix" n 1}
+ local_matrix_grp 0
+ addUserKnob {41 matrix l "" +STARTLINE T CameraFromMetadata.matrix}
+ addUserKnob {20 endGroup n -1}
+ addUserKnob {20 About}
+ addUserKnob {26 toolName l name T metadataToCamera}
+ addUserKnob {26 toolVersion l version T 0.3.0}
+ addUserKnob {26 toolAuthor l author T "<a style=\"color: rgb(200,200,200);\" href=\"https://mrlixm.github.io/\">Liam Collod</a>"}
+ addUserKnob {26 toolDescription l description T "Convert OpenEXR metadata to a Nuke camera node."}
+}
+ Input {
+  inputs 0
+  name image
+  xpos 319
+  ypos -310
+  number 2
+ }
+ Reformat {
+  type "to box"
+  box_width 2
+  box_height 2
+  box_fixed true
+  clamp true
+  black_outside true
+  name Reformat_2x2
+  label "\[value filter]"
+  xpos 319
+  ypos -250
+ }
+ Expression {
+  temp_name0 r1
+  temp_expr0 "\[lindex \[split \[metadata exr/worldToCamera] ,] 12]"
+  temp_name1 r2
+  temp_expr1 "\[lindex \[split \[metadata exr/worldToCamera] ,] 13]"
+  temp_name2 r3
+  temp_expr2 "\[lindex \[split \[metadata exr/worldToCamera] ,] 14]"
+  expr0 r1
+  expr1 r2
+  expr2 r3
+  name metadataMatrixRow4_
+  label "\[lrange \[split \[metadata exr/worldToCamera] ,] 0 3]\n\[lrange \[split \[metadata exr/worldToCamera] ,] 4 7]\n\[lrange \[split \[metadata exr/worldToCamera] ,] 8 11]\n\[lrange \[split \[metadata exr/worldToCamera] ,] 12 15]"
+  xpos 319
+  ypos -195
+ }
+ ColorMatrix {
+  matrix {
+      {{"\[lindex \[split \[metadata exr/worldToCamera] ,] 0]"} {"\[lindex \[split \[metadata exr/worldToCamera] ,] 1]"} {"\[lindex \[split \[metadata exr/worldToCamera] ,] 2]"}}
+      {{"\[lindex \[split \[metadata exr/worldToCamera] ,] 4]"} {"\[lindex \[split \[metadata exr/worldToCamera] ,] 5]"} {"\[lindex \[split \[metadata exr/worldToCamera] ,] 6]"}}
+      {{"\[lindex \[split \[metadata exr/worldToCamera] ,] 8]"} {"\[lindex \[split \[metadata exr/worldToCamera] ,] 9]"} {"\[lindex \[split \[metadata exr/worldToCamera] ,] 10]"}}
+    }
+  name toWorld
+  xpos 319
+  ypos -103
+ }
+ Expression {
+  expr0 r*-1
+  expr1 g*-1
+  expr2 b*-1
+  enable_mix_luminance false
+  name negate
+  xpos 319
+  ypos -71
+ }
+ NoOp {
+  name sampleTranslate
+  xpos 319
+  ypos -28
+  addUserKnob {20 User}
+  addUserKnob {7 tx}
+  tx {{"\[sample this r 0 0]"}}
+  addUserKnob {7 ty}
+  ty {{"\[sample this g 0 0]"}}
+  addUserKnob {7 tz}
+  tz {{"\[sample this b 0 0]"}}
+ }
+ Matrix {
+  channels none
+  matrix {
+      {{"\[lindex \[split \[metadata exr/worldToCamera] ,] 0]"} {"\[lindex \[split \[metadata exr/worldToCamera] ,] 1]"} {"\[lindex \[split \[metadata exr/worldToCamera] ,] 2] * -1"} {sampleTranslate.tx}}
+      {{"\[lindex \[split \[metadata exr/worldToCamera] ,] 4]"} {"\[lindex \[split \[metadata exr/worldToCamera] ,] 5]"} {"\[lindex \[split \[metadata exr/worldToCamera] ,] 6] * -1"} {sampleTranslate.ty}}
+      {{"\[lindex \[split \[metadata exr/worldToCamera] ,] 8]"} {"\[lindex \[split \[metadata exr/worldToCamera] ,] 9]"} {"\[lindex \[split \[metadata exr/worldToCamera] ,] 10] * -1"} {sampleTranslate.tz}}
+      {0 0 0 1}
+    }
+  name cameraToWorldMatrix
+  xpos 319
+  ypos 65
+ }
+ NoOp {
+  name otherMetadata
+  xpos 319
+  ypos 115
+  addUserKnob {20 User}
+  addUserKnob {7 fov R 0 150}
+  fov {{"\[metadata exr/CameraFov]"}}
+  addUserKnob {7 focalLength l "Focal Length" R 0 300}
+  focalLength {{"\[metadata exr/CameraFocalLength] * 25.4"}}
+  addUserKnob {7 apertureH l "Horizontal Aperture" t "in mm" R 0 100}
+  apertureH {{"\[metadata exr/CameraFilmApertureHorizontal] * 25.4"}}
+  addUserKnob {7 apertureV l "Vertical Aperture" t "in mm\n" R 0 100}
+  apertureV {{"\[metadata exr/CameraFilmApertureVertical] * 25.4"}}
+  addUserKnob {7 near}
+  near {{"\[metadata exr/arnold/camera/near_clip]"}}
+  addUserKnob {7 far R 0 10000}
+  far {{"\[metadata exr/arnold/camera/far_clip]"}}
+ }
+ StickyNote {
+  inputs 0
+  name StickyNote3
+  label "Calculate C (world position) by applying Rotations on T"
+  note_font_size 15
+  xpos 462
+  ypos -92
+ }
+ StickyNote {
+  inputs 0
+  name StickyNote3
+  label "Note the 25.4 value in expressions is to convert inch to mm"
+  note_font_size 13
+  xpos 462
+  ypos 115
+ }
+ StickyNote {
+  inputs 0
+  name StickyNote1
+  tile_color 0xcc9b80ff
+  label "< sampler here"
+  note_font_size 15
+  xpos 420
+  ypos -30
+ }
+ Input {
+  inputs 0
+  name look
+  xpos -54
+  ypos -304
+  number 1
+ }
+ Input {
+  inputs 0
+  name axis
+  xpos 122
+  ypos -309
+ }
+ Camera2 {
+  inputs 2
+  useMatrix true
+  matrix {
+      {{cameraToWorldMatrix.matrix} {cameraToWorldMatrix.matrix} {cameraToWorldMatrix.matrix} {cameraToWorldMatrix.matrix}}
+      {{cameraToWorldMatrix.matrix} {cameraToWorldMatrix.matrix} {cameraToWorldMatrix.matrix} {cameraToWorldMatrix.matrix}}
+      {{cameraToWorldMatrix.matrix} {cameraToWorldMatrix.matrix} {cameraToWorldMatrix.matrix} {cameraToWorldMatrix.matrix}}
+      {{cameraToWorldMatrix.matrix} {cameraToWorldMatrix.matrix} {cameraToWorldMatrix.matrix} {cameraToWorldMatrix.matrix}}
+    }
+  focal {{otherMetadata.focalLength}}
+  haperture {{otherMetadata.apertureH}}
+  vaperture {{otherMetadata.apertureV}}
+  near {{otherMetadata.near}}
+  far {{otherMetadata.far}}
+  name CameraFromMetadata
+  xpos 132
+  ypos -5
+ }
+ Output {
+  name Output1
+  xpos 122
+  ypos 187
+ }
+ StickyNote {
+  inputs 0
+  name StickyNote2
+  label "Isolate T (translations)"
+  note_font_size 15
+  xpos 471
+  ypos -179
+ }
+ StickyNote {
+  inputs 0
+  name StickyNote4
+  label "do not move, index 2 used in script"
+  xpos 317
+  ypos -335
+ }
+end_group
