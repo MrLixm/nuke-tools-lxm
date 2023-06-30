@@ -1,0 +1,146 @@
+set cut_paste_input [stack 0]
+version 12.2 v5
+push $cut_paste_input
+push 0
+push 0
+Group {
+ inputs 3
+ name metadataRsToCamera
+ tile_color 0xe22828ff
+ note_font_color 0xefefefff
+ selected true
+ xpos 412
+ ypos -167
+ addUserKnob {20 User l Camera}
+ addUserKnob {26 text_title l "" +STARTLINE T "<h1> Redshift EXR metadata to Camera</h1>"}
+ addUserKnob {26 "" +STARTLINE}
+ addUserKnob {26 text_diff_notice l "" +STARTLINE T "<p style=\"color: grey;\">Note that the 3 first values under are different to the original camera.<br>\nBut they produce the same result visually.</p>"}
+ addUserKnob {26 "" +STARTLINE}
+ addUserKnob {41 focal l "focal length" T CameraFromMetadata.focal}
+ addUserKnob {41 haperture l "horiz aperture" T CameraFromMetadata.haperture}
+ addUserKnob {41 vaperture l "vert aperture" T CameraFromMetadata.vaperture}
+ addUserKnob {41 win_translate l "window translate" T CameraFromMetadata.win_translate}
+ addUserKnob {41 win_scale l "window scale" T CameraFromMetadata.win_scale}
+ addUserKnob {41 winroll l "window roll" T CameraFromMetadata.winroll}
+ addUserKnob {41 focal_point l "focal distance" T CameraFromMetadata.focal_point}
+ addUserKnob {41 fstop T CameraFromMetadata.fstop}
+ addUserKnob {26 "" +STARTLINE}
+ addUserKnob {20 local_matrix_grp l "Local Matrix" n 1}
+ local_matrix_grp 0
+ addUserKnob {41 matrix l "" +STARTLINE T CameraFromMetadata.matrix}
+ addUserKnob {20 endGroup n -1}
+ addUserKnob {20 options_grp l "Options" n 1}
+ options_grp 0
+ addUserKnob {7 xAxisScale l "X Axis Scale" R -10 10}
+ xAxisScale 1
+ addUserKnob {7 yAxisScale l "Y Axis Scale" R -10 10}
+ yAxisScale 1
+ addUserKnob {7 zAxisScale l "Z Axis Scale" R -10 10}
+ zAxisScale -1
+ addUserKnob {20 endGroup n -1}
+ addUserKnob {20 About}
+ addUserKnob {26 toolName l name T metadataToCamera}
+ addUserKnob {26 toolVersion l version T 0.2.1}
+ addUserKnob {26 toolAuthor l author T "<a style=\"color: rgb(200,200,200);\" href=\"https://mrlixm.github.io/\">Liam Collod</a>"}
+ addUserKnob {26 toolDescription l description T "Convert Redshift OpenEXR metadata to a Nuke camera node."}
+ addUserKnob {26 toolUrl l url T "<a style=\"color: rgb(200,200,200);\" href=\"https://github.com/MrLixm/Foundry_Nuke\">https://github.com/MrLixm/Foundry_Nuke</a>"}
+}
+ Input {
+  inputs 0
+  name image
+  xpos 319
+  ypos -310
+  number 2
+ }
+ Reformat {
+  type "to box"
+  box_width 2
+  box_height 2
+  box_fixed true
+  clamp true
+  black_outside true
+  name Reformat_2x2
+  label "\[value filter]"
+  xpos 319
+  ypos -250
+ }
+ Matrix {
+  channels none
+  matrix {
+      {{"\[lindex \[split \[metadata exr/rs/camera/transform] ,] 0] * [value parent.xAxisScale]"} {"\[lindex \[split \[metadata exr/rs/camera/transform] ,] 4] * [value parent.yAxisScale]"} {"\[lindex \[split \[metadata exr/rs/camera/transform] ,] 8] * [value parent.zAxisScale]"} {"\[lindex \[split \[metadata exr/rs/camera/transform] ,] 12]"}}
+      {{"\[lindex \[split \[metadata exr/rs/camera/transform] ,] 1] * [value parent.xAxisScale]"} {"\[lindex \[split \[metadata exr/rs/camera/transform] ,] 5] * [value parent.yAxisScale]"} {"\[lindex \[split \[metadata exr/rs/camera/transform] ,] 9] * [value parent.zAxisScale]"} {"\[lindex \[split \[metadata exr/rs/camera/transform] ,] 13]"}}
+      {{"\[lindex \[split \[metadata exr/rs/camera/transform] ,] 2] * [value parent.xAxisScale]"} {"\[lindex \[split \[metadata exr/rs/camera/transform] ,] 6] * [value parent.yAxisScale]"} {"\[lindex \[split \[metadata exr/rs/camera/transform] ,] 10] * [value parent.zAxisScale]"} {"\[lindex \[split \[metadata exr/rs/camera/transform] ,] 14]"}}
+      {0 0 0 1}
+    }
+  name cameraToWorldMatrix
+  xpos 319
+  ypos 65
+ }
+ NoOp {
+  name otherMetadata
+  xpos 319
+  ypos 115
+  addUserKnob {20 User}
+  addUserKnob {7 fov R 0 150}
+  fov {{"\[metadata exr/rs/camera/fov]"}}
+  addUserKnob {7 fovRadians l "Fov Radians" R 0 150}
+  fovRadians {{"fov / (180/pi)"}}
+  addUserKnob {7 focalLength l "Focal Length" R 0 300}
+  focalLength {{"apertureH / (2 * \[expr {tan([value fovRadians] / 2)}])"}}
+  addUserKnob {7 apertureH l "Horizontal Aperture" t "in mm" R 0 100}
+  apertureH {{"\[lindex \[split \[metadata exr/rs/camera/aperture] ,] 0] * 25.4"}}
+  addUserKnob {7 apertureV l "Vertical Aperture" t "in mm\n" R 0 100}
+  apertureV {{"\[lindex \[split \[metadata exr/rs/camera/aperture] ,] 1] * 25.4"}}
+  addUserKnob {7 near}
+  near {{"\[metadata exr/rs/camera/nearPlane]"}}
+  addUserKnob {7 far R 0 10000}
+  far {{"\[metadata exr/rs/camera/farPlane]"}}
+  addUserKnob {7 focusDistance R 0 10000}
+  focusDistance {{"\[metadata exr/rs/camera/DOFFocusDistance]"}}
+ }
+ StickyNote {
+  inputs 0
+  name StickyNote3
+  label "Note the 25.4 value in expressions is to convert inch to mm"
+  note_font_size 13
+  xpos 462
+  ypos 115
+ }
+ Input {
+  inputs 0
+  name look
+  xpos -54
+  ypos -304
+  number 1
+ }
+ Input {
+  inputs 0
+  name axis
+  xpos 122
+  ypos -309
+ }
+ Camera2 {
+  inputs 2
+  useMatrix true
+  matrix {
+      {{cameraToWorldMatrix.matrix} {cameraToWorldMatrix.matrix} {cameraToWorldMatrix.matrix} {cameraToWorldMatrix.matrix}}
+      {{cameraToWorldMatrix.matrix} {cameraToWorldMatrix.matrix} {cameraToWorldMatrix.matrix} {cameraToWorldMatrix.matrix}}
+      {{cameraToWorldMatrix.matrix} {cameraToWorldMatrix.matrix} {cameraToWorldMatrix.matrix} {cameraToWorldMatrix.matrix}}
+      {{cameraToWorldMatrix.matrix} {cameraToWorldMatrix.matrix} {cameraToWorldMatrix.matrix} {cameraToWorldMatrix.matrix}}
+    }
+  focal {{otherMetadata.focalLength}}
+  haperture {{otherMetadata.apertureH}}
+  vaperture {{otherMetadata.apertureV}}
+  near {{otherMetadata.near}}
+  far {{otherMetadata.far}}
+  focal_point {{otherMetadata.focusDistance}}
+  name CameraFromMetadata
+  xpos 132
+  ypos -5
+ }
+ Output {
+  name Output1
+  xpos 122
+  ypos 187
+ }
+end_group

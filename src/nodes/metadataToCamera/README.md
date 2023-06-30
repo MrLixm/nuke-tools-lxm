@@ -4,13 +4,33 @@ A custom Nuke node to convert OpenEXR metadata to a Nuke Camera node.
 
 ![main-visual.png](main-visual.png)
 
+Metadata format supported :
+
+- Redshift
+  - `exr/rs/camera/transform`
+  - `exr/rs/camera/aperture`
+  - `exr/rs/camera/nearPlane`
+  - `exr/rs/camera/farPlane`
+  - `exr/rs/camera/DOFFocusDistance`
+
+- Arnold 
+  - `exr/worldToCamera`
+  - `exr/CameraFilmApertureHorizontal`
+  - `exr/CameraFilmApertureVertical`
+  - `exr/CameraFocalLength`
+  - `exr/arnold/camera/near_clip`
+  - `exr/arnold/camera/far_clip`
+
 # Install
 
-Copy/paste the content of the [tool-metadataToCamera.nk](tool-metadataToCamera.nk)
-file in your current scene.
+Pick the script corresponding to your render-engine :
 
-You don't need the python script you can find next to it, it is already
-included in the node's button.
+- arnold : [tool-metadataToCamera.nk](tool-metadataToCamera.nk)
+- redshift : [tool-metadataToCamera-redshift.nk](tool-metadataToCamera-redshift.nk)
+
+_You don't need the python script you can find in this directory, it is already
+included in the node's button._
+
 
 # Usage
 
@@ -20,10 +40,10 @@ See the node as Camera node with an extra input.
 - You should see the `focal length` change value.
 - You can then connect the node to a `Scene` node, a `ScanlineRender`, ...
 
-## Baking
+## Arnold/Baking
 
-The node wors "live", means the metadata change, the camera will update.
-This process is achieved via sampling rgb channels in a TCL expressions, which
+The nodes work "live", means the metadata change, the camera will update.
+But for the Arnold node this process is achieved via sampling rgb channels in a TCL expressions, which
 sometimes doesn't always evaluate and can be a bit unstable.
 
 If you need stability you can bake the node to a real Nuke Camera :
@@ -33,7 +53,7 @@ If you need stability you can bake the node to a real Nuke Camera :
 - Validate and wait  few second for the bake
 - You should find a new Camera node per view created.
 
-## Faq
+# Faq
 
 > Does it work with Nuke non-commercial ?
 
@@ -46,13 +66,10 @@ the timeline a bit or try to edit a knob value to force an update of the camera.
 
 If this does not solve your issue this means you might have missing metadata.
 
-Make sure you have the `exr/worldToCamera` key in your metadata. Additional metadata
-keys needed can be found on the internal `otherMetadata` node.
-
 > Why does the focal length doesn't match with the original camera
 
 As mentioned the `focal length`, `horizontal aperture`, `vertical aperture` will
-not match yoru original camera, but they will still produce the same "viewport"
+not match your original camera, but they will still produce the same "viewport"
 when you use the camera.
 
 # Developer
