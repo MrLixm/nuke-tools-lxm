@@ -30,9 +30,19 @@ Group {
  addUserKnob {41 winroll l "window roll" T CameraFromMetadata.winroll}
  addUserKnob {41 focal_point l "focal distance" T CameraFromMetadata.focal_point}
  addUserKnob {41 fstop T CameraFromMetadata.fstop}
+ addUserKnob {26 "" +STARTLINE}
  addUserKnob {20 local_matrix_grp l "Local Matrix" n 1}
  local_matrix_grp 0
  addUserKnob {41 matrix l "" +STARTLINE T CameraFromMetadata.matrix}
+ addUserKnob {20 endGroup n -1}
+ addUserKnob {20 options_grp l "Options" n 1}
+ options_grp 0
+ addUserKnob {7 xAxisScale l "X Axis Scale" R -10 10}
+ xAxisScale 1
+ addUserKnob {7 yAxisScale l "Y Axis Scale" R -10 10}
+ yAxisScale 1
+ addUserKnob {7 zAxisScale l "Z Axis Scale" R -10 10}
+ zAxisScale -1
  addUserKnob {20 endGroup n -1}
  addUserKnob {20 About}
  addUserKnob {26 toolName l name T metadataToCamera}
@@ -109,9 +119,9 @@ Group {
  Matrix {
   channels none
   matrix {
-      {{"\[lindex \[split \[metadata exr/worldToCamera] ,] 0]"} {"\[lindex \[split \[metadata exr/worldToCamera] ,] 1]"} {"\[lindex \[split \[metadata exr/worldToCamera] ,] 2] * -1"} {sampleTranslate.tx}}
-      {{"\[lindex \[split \[metadata exr/worldToCamera] ,] 4]"} {"\[lindex \[split \[metadata exr/worldToCamera] ,] 5]"} {"\[lindex \[split \[metadata exr/worldToCamera] ,] 6] * -1"} {sampleTranslate.ty}}
-      {{"\[lindex \[split \[metadata exr/worldToCamera] ,] 8]"} {"\[lindex \[split \[metadata exr/worldToCamera] ,] 9]"} {"\[lindex \[split \[metadata exr/worldToCamera] ,] 10] * -1"} {sampleTranslate.tz}}
+      {{"\[lindex \[split \[metadata exr/worldToCamera] ,] 0] * [value parent.xAxisScale]"} {"\[lindex \[split \[metadata exr/worldToCamera] ,] 1] * [value parent.yAxisScale]"} {"\[lindex \[split \[metadata exr/worldToCamera] ,] 2] * [value parent.zAxisScale]"} {sampleTranslate.tx}}
+      {{"\[lindex \[split \[metadata exr/worldToCamera] ,] 4] * [value parent.xAxisScale]"} {"\[lindex \[split \[metadata exr/worldToCamera] ,] 5] * [value parent.yAxisScale]"} {"\[lindex \[split \[metadata exr/worldToCamera] ,] 6] * [value parent.zAxisScale]"} {sampleTranslate.ty}}
+      {{"\[lindex \[split \[metadata exr/worldToCamera] ,] 8] * [value parent.xAxisScale]"} {"\[lindex \[split \[metadata exr/worldToCamera] ,] 9] * [value parent.yAxisScale]"} {"\[lindex \[split \[metadata exr/worldToCamera] ,] 10] * [value parent.zAxisScale]"} {sampleTranslate.tz}}
       {0 0 0 1}
     }
   name cameraToWorldMatrix
