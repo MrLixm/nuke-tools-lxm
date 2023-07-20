@@ -10,14 +10,18 @@ Expression {
  xpos 170
  ypos -2
  addUserKnob {20 User}
- addUserKnob {19 contrast}
- contrast 0.66
- addUserKnob {6 contrast_panelDropped l "panel dropped state" -STARTLINE +HIDDEN}
+ addUserKnob {19 contrast R 0 5}
+ contrast 1.0
  addUserKnob {7 pivot}
  pivot 0.18
  addUserKnob {7 p t "actual pivot used"}
  p {{"0.5 + pivot *0.5"}}
- addUserKnob {26 "" +STARTLINE}
- addUserKnob {26 source l "" +STARTLINE T "<h1>Source :</h1>\n<h2>Formula</h2>\n<p><em>src\\OpenColorIO\\ops\\gradingprimary\\GradingPrimaryOpCPU.cpp#L173</em></p>\n<h2>Pivot</h2>\n<p><em>src\\OpenColorIO\\ops\\gradingprimary\\GradingPrimary.cpp#L151</em></p>"}
- addUserKnob {6 color_rgba_panelDropped l "panel dropped state" +HIDDEN +STARTLINE}
+ addUserKnob {20 About}
+ addUserKnob {26 toolName l name T OCIOContrastLog}
+ addUserKnob {26 toolVersion l version T 1.0.1}
+ addUserKnob {26 toolAuthor l author T "<a style=\"color: rgb(200,200,200);\" href=\"https://mrlixm.github.io/\">Liam Collod</a>"}
+ addUserKnob {26 toolDescription l description T "Contrast on log encoding based on OCIO implementation."}
+ addUserKnob {26 toolUrl l url T "<a style=\"color: rgb(200,200,200);\" href=\"https://github.com/MrLixm/Foundry_Nuke\">https://github.com/MrLixm/Foundry_Nuke</a>"}
+ addUserKnob {26 toolRef l "Reference" +STARTLINE T "<h2>Formula</h2>\n<p><em>src\\OpenColorIO\\ops\\gradingprimary\\GradingPrimaryOpCPU.cpp#L173</em></p>\n<h2>Pivot</h2>\n<p><em>src\\OpenColorIO\\ops\\gradingprimary\\GradingPrimary.cpp#L151</em></p>"}
+
 }
