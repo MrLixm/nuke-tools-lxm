@@ -8,18 +8,34 @@ Expression {
  expr1 L+saturation.g*(g-L)
  expr2 L+saturation.b*(b-L)
  name ExprSaturation
- selected true
- xpos -779
- ypos -103
- addUserKnob {20 User}
- addUserKnob {6 color_rgba_panelDropped l "panel dropped state" +HIDDEN +STARTLINE}
- addUserKnob {18 saturation}
+ addUserKnob {20 User l "Saturation"}
+ addUserKnob {18 saturation R 0 10}
  saturation 1
  addUserKnob {7 wR}
- wR 0.2126
+ wR 0.212639
  addUserKnob {7 wG}
- wG 0.7152
+ wG 0.71516867
  addUserKnob {7 wB}
- wB 0.0722
- addUserKnob {6 color_rgb_panelDropped l "panel dropped state" +HIDDEN +STARTLINE}
+ wB 0.07219231
+ addUserKnob {26 "" +STARTLINE}
+ addUserKnob {26 text_description l "" +STARTLINE T "Change weights to correspond to the input's colorspace :"}
+ addUserKnob {26 pre_buttons1 l "" +STARTLINE T " "}
+ addUserKnob {22 set_srgb l "sRGB" -STARTLINE T "n=nuke.thisNode()\nn['wR'].setValue(0.21263900)\nn['wG'].setValue(0.71516867)\nn['wB'].setValue(0.07219231)"}
+ addUserKnob {22 set_acescg l "ACEScg" -STARTLINE T "n=nuke.thisNode()\nn['wR'].setValue(0.27222871)\nn['wG'].setValue(0.67408176)\nn['wB'].setValue(0.05368951)"}
+ addUserKnob {22 set_dcip3 l "DCI-P3" -STARTLINE T "n=nuke.thisNode()\nn['wR'].setValue(0.20949167)\nn['wG'].setValue(0.72159525)\nn['wB'].setValue(0.06891306)"}
+ addUserKnob {22 set_p3d65 l "P3 (D65)" -STARTLINE T "n=nuke.thisNode()\nn['wR'].setValue(0.22897456)\nn['wG'].setValue(0.69173852)\nn['wB'].setValue(0.07928691)"}
+ addUserKnob {22 set_bt2020 l "BT.2020" -STARTLINE T "n=nuke.thisNode()\nn['wR'].setValue(0.26270021)\nn['wG'].setValue(0.67799807)\nn['wB'].setValue(0.05930171)"}
+ addUserKnob {26 pre_buttons2 l "" +STARTLINE T " "}
+ addUserKnob {22 set_awg3 l "ARRI Wide Gamut 3" -STARTLINE T "n=nuke.thisNode()\nn['wR'].setValue(0.29195377)\nn['wG'].setValue(0.82384104)\nn['wB'].setValue(-0.11579482)"}
+ addUserKnob {22 set_awg4 l "ARRI Wide Gamut 4" -STARTLINE T "n=nuke.thisNode()\nn['wR'].setValue(0.25452417)\nn['wG'].setValue(0.78147773)\nn['wB'].setValue(-0.03600190)"}
+ addUserKnob {26 pre_buttons3 l "" +STARTLINE T " "}
+ addUserKnob {22 set_sgamut3 l "S-Gamut 3" -STARTLINE T "n=nuke.thisNode()\nn['wR'].setValue(0.27097967)\nn['wG'].setValue(0.78660641)\nn['wB'].setValue(-0.05758608)"}
+ addUserKnob {22 set_dwg l "DaVinci Wide Gamut" -STARTLINE T "n=nuke.thisNode()\nn['wR'].setValue(0.27411851)\nn['wG'].setValue(0.87363189)\nn['wB'].setValue(-0.14775040)"}
+ addUserKnob {20 About}
+ addUserKnob {26 toolName l name T OCIOSaturation}
+ addUserKnob {26 toolVersion l version T 1.1.0}
+ addUserKnob {26 toolAuthor l author T "<a style=\"color: rgb(200,200,200);\" href=\"https://mrlixm.github.io/\">Liam Collod</a>"}
+ addUserKnob {26 toolDescription l description T "Saturation based on OCIO implementation."}
+ addUserKnob {26 toolUrl l url T "<a style=\"color: rgb(200,200,200);\" href=\"https://github.com/MrLixm/Foundry_Nuke\">https://github.com/MrLixm/Foundry_Nuke</a>"}
+ addUserKnob {26 toolRef l "Reference" +STARTLINE T "<a style=\"color: rgb(200,200,200);\" href=\"https://community.acescentral.com/t/notice-of-meeting-aces-output-transforms-architecture-vwg-meeting-22-07-07-2021/3872/13?u=mrlixm\">Thomas Mansencal</a>"}
 }
