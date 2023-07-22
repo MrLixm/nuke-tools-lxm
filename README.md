@@ -6,14 +6,14 @@ Collections of resources I made for Foundry's Nuke software.
 
 _this table might not be always up-to-date_
 
-| tool                                                                        | description                                                                | type          |
-|-----------------------------------------------------------------------------|----------------------------------------------------------------------------|---------------|
-| [NodeToText](src/i-o/NodeToText)                                            | Convert the selected nodes knobs:values to a .json.                        | script        |
-| [metadataToCamera](src/nodes/metadataToCamera)                              | A custom Nuke node to convert OpenEXR metadata to a Nuke Camera node.      | nodes         |
-| [imageCropDivide](src/transforms/imageCropDivide)                           | From given maximum dimensions, divide an input image into multiples crops. | nodes, script |
-| [contrast-linear-ocio.expr](src/nodes/grading/contrast-linear-ocio.expr.nk) | contrast on linear encoded imagery based on the OCIO implementation        | nodes         |
-| [contrast-log-ocio.expr](src/nodes/grading/contrast-log-ocio.expr.nk)       | contrast on log encoded imagery based on the OCIO implementation           | nodes         |
-| [ocio-saturation.expr](src/nodes/grading/ocio-saturation.expr.nk)           | saturation with variable weights also based on OCIO implementation         | nodes         |
+| tool                                             | description                                                                | type          | tag                                                         |
+|--------------------------------------------------|----------------------------------------------------------------------------|---------------|-------------------------------------------------------------|
+| [nodeToText](src/nodeToText)                     | Convert the selected nodes knobs:values to a .json.                        | script        | ![i-o](https://img.shields.io/badge/i--o-9a52dd)            |
+| [metadataToCamera](src/metadataToCamera)         | A custom Nuke node to convert OpenEXR metadata to a Nuke Camera node.      | nodes         | ![i-o](https://img.shields.io/badge/i--o-9a52dd)            |
+| [imageCropDivide](src/imageCropDivide)           | From given maximum dimensions, divide an input image into multiples crops. | nodes, script | ![transform](https://img.shields.io/badge/transform-4c78a6) |
+| [ocio-contrast-linear](src/ocio-contrast-linear) | contrast on linear encoded imagery based on the OCIO implementation        | nodes         | ![grading](https://img.shields.io/badge/grading-43896b)     |
+| [ocio-contrast-log](src/ocio-contrast-log)       | contrast on log encoded imagery based on the OCIO implementation           | nodes         | ![grading](https://img.shields.io/badge/grading-43896b)     |
+| [ocio-saturation](src/ocio-saturation)           | saturation with variable weights also based on OCIO implementation         | nodes         | ![grading](https://img.shields.io/badge/grading-43896b)     |
 
 # Utilisation
 
