@@ -47,3 +47,22 @@ Check [LICENSE.md](LICENSE.md).
 Feel free to open an issue if you spot anything that can be improved. 
 Same goes for Pull-request, unless it's a very small easy fix please open an 
 issue before to discuss about it.
+
+## Tips
+
+- generate the `tile_color` knob value from an hexadecimal color :
+  ```python
+  # light sky blue
+  hex(int("5A82DF" + "00", 16))
+  ```
+
+- template for About section of each node
+
+  ```shell
+  addUserKnob {20 About}
+  addUserKnob {26 toolName l name T TOOLNAME}
+  addUserKnob {26 toolVersion l version T 1.0.0}
+  addUserKnob {26 toolAuthor l author T "<a style=\"color: rgb(200,200,200);\" href=\"https://mrlixm.github.io/\">Liam Collod</a>"}
+  addUserKnob {26 toolDescription l description T "some description..."}
+  addUserKnob {26 toolUrl l url T "<a style=\"color: rgb(200,200,200);\" href=\"https://github.com/MrLixm/Foundry_Nuke\">https://github.com/MrLixm/Foundry_Nuke</a>"}
+  ```
