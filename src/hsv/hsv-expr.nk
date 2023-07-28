@@ -1,0 +1,113 @@
+Group {
+ inputs 1
+ name HSVColorCorrect
+ tile_color 0x5a82df00
+ note_font_color 0xefefefff
+ xpos 0
+ ypos 0
+ addUserKnob {20 User l HSV}
+ addUserKnob {41 hue l "hue" +STARTLINE T Expression_HSV_Edit.hue}
+ addUserKnob {41 saturation l "saturation" +STARTLINE T Expression_HSV_Edit.saturation}
+ addUserKnob {41 value l "value" +STARTLINE T Expression_HSV_Edit.value}
+ addUserKnob {20 About}
+ addUserKnob {26 toolName l name T HSVColorCorrect}
+ addUserKnob {26 toolVersion l version T 1.0.0}
+ addUserKnob {26 toolAuthor l author T "<a style=\"color: rgb(200,200,200);\" href=\"https://mrlixm.github.io/\">Liam Collod</a>"}
+ addUserKnob {26 toolDescription l description T "Color correct an RGB source using the HSV color model."}
+ addUserKnob {26 toolUrl l url T "<a style=\"color: rgb(200,200,200);\" href=\"https://github.com/MrLixm/Foundry_Nuke\">https://github.com/MrLixm/Foundry_Nuke</a>"}
+ addUserKnob {26 note l note +STARTLINE T "Be aware that the HSV model is colorspace agnostic, meaning the same input with<br>2 different colorspace, edited using the same HSV value,<br>will produce to 2 different outputs.<br>See <a style=\"color: rgb(200,200,200);\" href=\"https://en.wikipedia.org/wiki/HSL_and_HSV#Disadvantages\">wikipedia</a> for other disadvantges."}
+}
+ Input {
+  inputs 0
+  name Input
+  xpos 0
+  ypos -50
+ }
+ Expression {
+  temp_name0 max_rgb
+  temp_expr0 "max(r, g, b)"
+  temp_name1 hue_red
+  temp_expr1 "(max_rgb - r) / (max_rgb - min(r, g, b))"
+  temp_name2 hue_green
+  temp_expr2 "(max_rgb - g) / (max_rgb - min(r, g, b))"
+  temp_name3 hue_blue
+  temp_expr3 "(max_rgb - b) / (max_rgb - min(r, g, b))"
+  expr0 "min(r, g, b) == max_rgb ? 0.0 : r == max_rgb ? hue_blue - hue_green : (g == max_rgb ? 2.0 + hue_red - hue_blue : 4.0 + hue_green - hue_red )"
+  expr1 "min(r, g, b) == max_rgb ? 0.0 : (max_rgb - min(r, g, b)) / max_rgb"
+  expr2 "max_rgb"
+  name Expression_RGB_to_HSV
+  xpos 0
+  ypos 60
+ }
+ Expression {
+  expr0 "fmod(fmod((r/6.0), 1.0) + 1.0, 1.0)"
+  expr1 "g"
+  expr2 "b"
+  name Expression_RGB_to_HSV_Hfix
+  xpos 0
+  ypos 100
+ }
+ Expression {
+  temp_name0 h
+  temp_expr0 "hue / 360"
+  temp_name1 s
+  temp_expr1 "saturation"
+  temp_name2 v
+  temp_expr2 "value"
+  expr0 "r + h"
+  expr1 "g * s"
+  expr2 "b * v"
+  name Expression_HSV_Edit
+  xpos 0
+  ypos 200
+  addUserKnob {20 User}
+  addUserKnob {7 hue R 0.0 360.0}
+  hue 0.0
+  addUserKnob {7 saturation R 0.0 2.0}
+  saturation 1.0
+  addUserKnob {7 value R 0.0 2.0}
+  value 1.0
+ }
+ Expression {
+  temp_name0 i
+  temp_expr0 "fmod(fmod(trunc(r*6.0), 6) + 6, 6)"
+  temp_name1 p
+  temp_expr1 "b*(1.0 - g)"
+  temp_name2 q
+  temp_expr2 "b*(1.0 - g * ((r*6.0) - trunc(r*6.0)))"
+  temp_name3 t
+  temp_expr3 "b*(1.0 - g * (1.0 - ((r*6.0) - trunc(r*6.0))))"
+  expr0 "g == 0 ? b : i == 0 ? b : i == 1 ? q : i == 2 ? p : i == 3 ? p : i == 4 ? t : b"
+  expr1 "g == 0 ? b : i == 0 ? t : i == 1 ? b : i == 2 ? b : i == 3 ? q : i == 4 ? p : p"
+  expr2 "g == 0 ? b : i == 0 ? p : i == 1 ? p : i == 2 ? t : i == 3 ? b : i == 4 ? b : q"
+  name Expression_HSV_to_RGB
+  xpos 0
+  ypos 250
+ }
+ Output {
+  name Output1
+  xpos 0
+  ypos 350
+ }
+ StickyNote {
+  inputs 0
+  name StickyNote1
+  label "References:\npython colorsys.rgb_to_hsv() function"
+  xpos 0
+  ypos 0
+ }
+ StickyNote {
+  inputs 0
+  name StickyNote2
+  label "note that python modulo % is floored \nwhile nuke fmod() is truncated\npython % == fmod(fmod(n, M) + M, M)"
+  xpos 100
+  ypos 100
+ }
+ StickyNote {
+  inputs 0
+  name StickyNote3
+  label "hue range is 0-1"
+  xpos 100
+  ypos 150
+ }
+end_group
