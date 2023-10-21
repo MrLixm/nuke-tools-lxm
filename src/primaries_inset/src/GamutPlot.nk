@@ -1,0 +1,39 @@
+Group {
+ name gamut_define
+ addUserKnob {20 User l GamutPlot}
+ addUserKnob {12 red_primary l "red_primary" +STARTLINE +NO_HANDLES}
+ red_primary {0.64 0.33}
+ addUserKnob {12 green_primary l "green_primary" +STARTLINE +NO_HANDLES}
+ green_primary {0.3 0.6}
+ addUserKnob {12 blue_primary l "blue_primary" +STARTLINE +NO_HANDLES}
+ blue_primary {0.15 0.06}
+ addUserKnob {26 "" +STARTLINE}
+ addUserKnob {12 whitepoint l "whitepoint" +STARTLINE +NO_HANDLES}
+ whitepoint {0.3127 0.329}
+ addUserKnob {6 whitepoint_show l "show" -STARTLINE}
+ addUserKnob {26 "" +STARTLINE}
+ addUserKnob {7 point_size l "point_size" R 0 100}
+ point_size 10
+ addUserKnob {7 outline_width l "outline_width"}
+ outline_width 0.8
+ addUserKnob {20 endGroup n -1}
+ addUserKnob {20 About}
+ addUserKnob {26 toolName l name T GamutPlot}
+ addUserKnob {26 toolVersion l version T 0.1.0}
+ addUserKnob {26 toolAuthor l author T "<a style=\"color: rgb(200,200,200);\" href=\"https://mrlixm.github.io/\">Liam Collod</a>"}
+ addUserKnob {26 toolDescription l description T "Plot the gamut of a colorspace on the CIE xy coordinate system."}
+ addUserKnob {26 toolUrl l url T "<a style=\"color: rgb(200,200,200);\" href=\"https://github.com/MrLixm/Foundry_Nuke\">https://github.com/MrLixm/Foundry_Nuke</a>"}
+ addUserKnob {20 endGroup n -1}
+}
+ Input {
+  inputs 0
+  name graph_area
+  xpos 0
+  ypos 0
+ }
+ Output {
+  name Output1
+  xpos 0
+  ypos 200
+ }
+end_group
