@@ -30,6 +30,8 @@ Group {
  addUserKnob {7 inset_r l "inset R" t "inset red primary towards whitepoint"}
  addUserKnob {7 inset_g l "inset G" t "inset green primary towards whitepoint"}
  addUserKnob {7 inset_b l "inset B" t "inset blue primary towards whitepoint"}
+ addUserKnob {7 whitepoint_offset_x l "whitepoint offset x" R -0.5 0.5}
+ addUserKnob {7 whitepoint_offset_y l "whitepoint offset y" R -0.5 0.5}
  addUserKnob {26 "" +STARTLINE}
  addUserKnob {20 local_result_grp l "Outputs" n 1}
  local_result_grp 0
@@ -41,7 +43,7 @@ Group {
  addUserKnob {20 endGroup n -1}
  addUserKnob {20 About}
  addUserKnob {26 toolName l name T PrimariesInset}
- addUserKnob {26 toolVersion l version T 0.2.0}
+ addUserKnob {26 toolVersion l version T 0.3.0}
  addUserKnob {26 toolAuthor l author T "<a style=\"color: rgb(200,200,200);\" href=\"https://mrlixm.github.io/\">Liam Collod</a>"}
  addUserKnob {26 toolDescription l description T "Reshape a colorspace gamut and plot it on the CIE xy space."}
  addUserKnob {26 toolUrl l url T "<a style=\"color: rgb(200,200,200);\" href=\"https://github.com/MrLixm/Foundry_Nuke\">https://github.com/MrLixm/Foundry_Nuke</a>"}
@@ -571,7 +573,9 @@ Group {
    addUserKnob {7 inset_b l "inset_b" t "inset towards whitepoint"}
    inset_b {{parent.inset_b}}
    addUserKnob {7 whitepoint_offset_x l "whitepoint_offset_x" R -0.5 0.5}
+   whitepoint_offset_x {{parent.whitepoint_offset_x}}
    addUserKnob {7 whitepoint_offset_y l "whitepoint_offset_y" R -0.5 0.5}
+   whitepoint_offset_y {{parent.whitepoint_offset_y}}
    addUserKnob {20 About}
    addUserKnob {26 toolName l name T GamutInset}
    addUserKnob {26 toolVersion l version T 0.2.0}

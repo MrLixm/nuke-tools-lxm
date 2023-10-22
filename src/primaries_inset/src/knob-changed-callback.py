@@ -15,6 +15,8 @@ COLORSCIENCE_KNOBS = [
     "inset_r",
     "inset_g",
     "inset_b",
+    "whitepoint_offset_x",
+    "whitepoint_offset_y",
 ]
 
 
