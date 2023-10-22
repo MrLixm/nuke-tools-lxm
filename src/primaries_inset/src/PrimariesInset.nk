@@ -43,7 +43,7 @@ Group {
  addUserKnob {20 endGroup n -1}
  addUserKnob {20 About}
  addUserKnob {26 toolName l name T PrimariesInset}
- addUserKnob {26 toolVersion l version T 0.3.0}
+ addUserKnob {26 toolVersion l version T 0.3.1}
  addUserKnob {26 toolAuthor l author T "<a style=\"color: rgb(200,200,200);\" href=\"https://mrlixm.github.io/\">Liam Collod</a>"}
  addUserKnob {26 toolDescription l description T "Reshape a colorspace gamut and plot it on the CIE xy space."}
  addUserKnob {26 toolUrl l url T "<a style=\"color: rgb(200,200,200);\" href=\"https://github.com/MrLixm/Foundry_Nuke\">https://github.com/MrLixm/Foundry_Nuke</a>"}
@@ -522,18 +522,18 @@ Group {
    addUserKnob {26 "" +STARTLINE}
    addUserKnob {12 primary_inset_u_r l "primary_inset_u_r" +STARTLINE +NO_HANDLES}
    primary_inset_u_r {
-       {{lerp(primary_src_r.x,whitepoint_src.x,inset)}}
-       {{lerp(primary_src_r.y,whitepoint_src.y,inset)}}
+       {{lerp(primary_src_r.x,whitepoint_edited.x,inset)}}
+       {{lerp(primary_src_r.y,whitepoint_edited.y,inset)}}
      }
    addUserKnob {12 primary_inset_u_g l "primary_inset_u_g" +STARTLINE +NO_HANDLES}
    primary_inset_u_g {
-       {{lerp(primary_src_g.x,whitepoint_src.x,inset)}}
-       {{lerp(primary_src_g.y,whitepoint_src.y,inset)}}
+       {{lerp(primary_src_g.x,whitepoint_edited.x,inset)}}
+       {{lerp(primary_src_g.y,whitepoint_edited.y,inset)}}
      }
    addUserKnob {12 primary_inset_u_b l "primary_inset_u_b" +STARTLINE +NO_HANDLES}
    primary_inset_u_b {
-       {{lerp(primary_src_b.x,whitepoint_src.x,inset)}}
-       {{lerp(primary_src_b.y,whitepoint_src.y,inset)}}
+       {{lerp(primary_src_b.x,whitepoint_edited.x,inset)}}
+       {{lerp(primary_src_b.y,whitepoint_edited.y,inset)}}
      }
    addUserKnob {26 "" +STARTLINE}
    addUserKnob {12 whitepoint_edited l "whitepoint_edited" +STARTLINE +NO_HANDLES}
@@ -543,18 +543,18 @@ Group {
      }
    addUserKnob {12 red_primary l "red_primary" +STARTLINE +NO_HANDLES}
    red_primary {
-       {{lerp(primary_inset_u_r.x,whitepoint_src.x,inset_r)}}
-       {{lerp(primary_inset_u_r.y,whitepoint_src.y,inset_r)}}
+       {{lerp(primary_inset_u_r.x,whitepoint_edited.x,inset_r)}}
+       {{lerp(primary_inset_u_r.y,whitepoint_edited.y,inset_r)}}
      }
    addUserKnob {12 green_primary l "green_primary" +STARTLINE +NO_HANDLES}
    green_primary {
-       {{lerp(primary_inset_u_g.x,whitepoint_src.x,inset_g)}}
-       {{lerp(primary_inset_u_g.y,whitepoint_src.y,inset_g)}}
+       {{lerp(primary_inset_u_g.x,whitepoint_edited.x,inset_g)}}
+       {{lerp(primary_inset_u_g.y,whitepoint_edited.y,inset_g)}}
      }
    addUserKnob {12 blue_primary l "blue_primary" +STARTLINE +NO_HANDLES}
    blue_primary {
-       {{lerp(primary_inset_u_b.x,whitepoint_src.x,inset_b)}}
-       {{lerp(primary_inset_u_b.y,whitepoint_src.y,inset_b)}}
+       {{lerp(primary_inset_u_b.x,whitepoint_edited.x,inset_b)}}
+       {{lerp(primary_inset_u_b.y,whitepoint_edited.y,inset_b)}}
      }
    addUserKnob {26 "" +STARTLINE}
    addUserKnob {6 whitepoint_show l "show whitepoint" +STARTLINE}
@@ -578,7 +578,7 @@ Group {
    whitepoint_offset_y {{parent.whitepoint_offset_y}}
    addUserKnob {20 About}
    addUserKnob {26 toolName l name T GamutInset}
-   addUserKnob {26 toolVersion l version T 0.2.0}
+   addUserKnob {26 toolVersion l version T 0.2.1}
    addUserKnob {26 toolAuthor l author T "<a style=\"color: rgb(200,200,200);\" href=\"https://mrlixm.github.io/\">Liam Collod</a>"}
    addUserKnob {26 toolDescription l description T "Reshape and plot the gamut of a colorspace on the CIE xy coordinate system."}
    addUserKnob {26 toolUrl l url T "<a style=\"color: rgb(200,200,200);\" href=\"https://github.com/MrLixm/Foundry_Nuke\">https://github.com/MrLixm/Foundry_Nuke</a>"}
