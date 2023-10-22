@@ -1,6 +1,8 @@
 Group {
- name primaries_inset
+ name PrimariesInset1
  knobChanged "# filled by build"
+ tile_color 0x3a755e00
+ note_font_color 0xefefefff
  addUserKnob {20 User l GamutPlot}
  addUserKnob {26 txt_colorspace l "" +STARTLINE T "<h1> Colorspace</h1>"}
  addUserKnob {26 txt_colorspace_d l "" +STARTLINE T "<i>Define the colorspace to inset.</i>"}
@@ -43,7 +45,7 @@ Group {
  addUserKnob {20 endGroup n -1}
  addUserKnob {20 About}
  addUserKnob {26 toolName l name T PrimariesInset}
- addUserKnob {26 toolVersion l version T 0.3.1}
+ addUserKnob {26 toolVersion l version T 0.3.2}
  addUserKnob {26 toolAuthor l author T "<a style=\"color: rgb(200,200,200);\" href=\"https://mrlixm.github.io/\">Liam Collod</a>"}
  addUserKnob {26 toolDescription l description T "Reshape a colorspace gamut and plot it on the CIE xy space."}
  addUserKnob {26 toolUrl l url T "<a style=\"color: rgb(200,200,200);\" href=\"https://github.com/MrLixm/Foundry_Nuke\">https://github.com/MrLixm/Foundry_Nuke</a>"}
