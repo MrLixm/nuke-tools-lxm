@@ -1,5 +1,6 @@
 Group {
  name primaries_inset
+ knobChanged ""
  addUserKnob {20 User l GamutPlot}
  addUserKnob {12 primary_r l "primary R" +STARTLINE +NO_HANDLES}
  primary_r {0.64 0.33}
