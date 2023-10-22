@@ -1,6 +1,6 @@
 Group {
- name gamut_define
- addUserKnob {20 User l GamutPlot}
+ name gamut_inset
+ addUserKnob {20 User l GamutInset}
  addUserKnob {12 whitepoint l "whitepoint" +STARTLINE +NO_HANDLES}
  addUserKnob {6 whitepoint_show l "show" -STARTLINE}
  whitepoint_show true
