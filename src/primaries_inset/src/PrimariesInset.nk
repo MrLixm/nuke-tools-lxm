@@ -56,19 +56,31 @@ Group {
    ypos 100
    addUserKnob {20 User l GamutPlot}
    addUserKnob {12 red_primary l "red_primary" +STARTLINE +NO_HANDLES}
-   red_primary {0.64 0.33}
+   red_primary {
+       {{parent.primary_r.x}}
+       {{parent.primary_r.y}}
+     }
    addUserKnob {12 green_primary l "green_primary" +STARTLINE +NO_HANDLES}
-   green_primary {0.3 0.6}
+   green_primary {
+       {{parent.primary_g.x}}
+       {{parent.primary_g.y}}
+     }
    addUserKnob {12 blue_primary l "blue_primary" +STARTLINE +NO_HANDLES}
-   blue_primary {0.15 0.06}
+   blue_primary {
+       {{parent.primary_b.x}}
+       {{parent.primary_b.y}}
+     }
    addUserKnob {26 "" +STARTLINE}
    addUserKnob {12 whitepoint l "whitepoint" +STARTLINE +NO_HANDLES}
-   whitepoint {0.3127 0.329}
+   whitepoint {
+       {{parent.whitepoint.x}}
+       {{parent.whitepoint.y}}
+     }
    addUserKnob {6 whitepoint_show l "show" -STARTLINE}
-   whitepoint_show true
+   whitepoint_show {{parent.whitepoint_show}}
    addUserKnob {26 "" +STARTLINE}
    addUserKnob {7 point_size l "point_size" R 0 100}
-   point_size 10
+   point_size {{parent.point_size}}
    addUserKnob {7 outline_width l "outline_width"}
    outline_width 0.8
    addUserKnob {20 endGroup n -1}
@@ -488,12 +500,28 @@ Group {
    ypos 150
    addUserKnob {20 User l GamutInset}
    addUserKnob {12 whitepoint l "whitepoint" +STARTLINE +NO_HANDLES}
+   whitepoint {
+       {{gamut_define.whitepoint.x}}
+       {{gamut_define.whitepoint.y}}
+     }
    addUserKnob {6 whitepoint_show l "show" -STARTLINE}
-   whitepoint_show true
+   whitepoint_show {{parent.whitepoint_show}}
    addUserKnob {26 "" +STARTLINE}
    addUserKnob {12 primary_src_r l "primary_src_r" +STARTLINE +NO_HANDLES}
+   primary_src_r {
+       {{gamut_define.red_primary.x}}
+       {{gamut_define.red_primary.y}}
+     }
    addUserKnob {12 primary_src_g l "primary_src_g" +STARTLINE +NO_HANDLES}
+   primary_src_g {
+       {{gamut_define.green_primary.x}}
+       {{gamut_define.green_primary.y}}
+     }
    addUserKnob {12 primary_src_b l "primary_src_b" +STARTLINE +NO_HANDLES}
+   primary_src_b {
+       {{gamut_define.blue_primary.x}}
+       {{gamut_define.blue_primary.y}}
+     }
    addUserKnob {26 "" +STARTLINE}
    addUserKnob {12 primary_inset_u_r l "primary_inset_u_r" +STARTLINE +NO_HANDLES}
    primary_inset_u_r {
@@ -528,14 +556,18 @@ Group {
      }
    addUserKnob {26 "" +STARTLINE}
    addUserKnob {7 point_size l "point_size" R 0 100}
-   point_size 4
+   point_size {{gamut_define.point_size*0.4}}
    addUserKnob {7 outline_width l "outline_width"}
    outline_width 0
    addUserKnob {26 "" +STARTLINE}
    addUserKnob {7 inset l "inset"}
+   inset {{parent.inset}}
    addUserKnob {7 inset_r l "inset_r" t "inset towards whitepoint"}
+   inset_r {{parent.inset_r}}
    addUserKnob {7 inset_g l "inset_g" t "inset towards whitepoint"}
+   inset_g {{parent.inset_g}}
    addUserKnob {7 inset_b l "inset_b" t "inset towards whitepoint"}
+   inset_b {{parent.inset_b}}
    addUserKnob {20 endGroup n -1}
    addUserKnob {20 About}
    addUserKnob {26 toolName l name T GamutInset}
