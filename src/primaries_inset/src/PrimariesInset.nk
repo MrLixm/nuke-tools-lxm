@@ -21,9 +21,17 @@ Group {
  addUserKnob {7 inset_r l "inset R" t "inset red primary towards whitepoint"}
  addUserKnob {7 inset_g l "inset G" t "inset green primary towards whitepoint"}
  addUserKnob {7 inset_b l "inset B" t "inset blue primary towards whitepoint"}
+ addUserKnob {26 "" +STARTLINE}
+ addUserKnob {20 local_result_grp l "Outputs" n 1}
+ addUserKnob {41 primary_r_inset l "primary_r_inset" T gamut_inset.red_primary}
+ addUserKnob {41 primary_g_inset l "primary_g_inset" T gamut_inset.green_primary}
+ addUserKnob {41 primary_b_inset l "primary_b_inset" T gamut_inset.blue_primary}
+ addUserKnob {41 whitepoint_inset l "whitepoint_inset" T gamut_inset.whitepoint}
+ addUserKnob {41 matrix l "matrix" t "conversion matrix that applies the inset" T MatrixInset.matrix}
+ addUserKnob {20 endGroup n -1}
  addUserKnob {20 About}
  addUserKnob {26 toolName l name T PrimariesInset}
- addUserKnob {26 toolVersion l version T 0.1.1}
+ addUserKnob {26 toolVersion l version T 0.2.0}
  addUserKnob {26 toolAuthor l author T "<a style=\"color: rgb(200,200,200);\" href=\"https://mrlixm.github.io/\">Liam Collod</a>"}
  addUserKnob {26 toolDescription l description T "Reshape a colorspace gamut and plot it on the CIE xy space."}
  addUserKnob {26 toolUrl l url T "<a style=\"color: rgb(200,200,200);\" href=\"https://github.com/MrLixm/Foundry_Nuke\">https://github.com/MrLixm/Foundry_Nuke</a>"}
