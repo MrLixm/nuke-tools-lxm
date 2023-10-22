@@ -15,6 +15,9 @@ assert GAMUT_CONVERT_PATH.exists()
 KNOB_CALLBACK_PATH = Path(__file__).parent / "knob-changed-callback.py"
 assert KNOB_CALLBACK_PATH.exists()
 
+PRESET_SCRIPT_PATH = Path(__file__).parent / "colorspace-preset-script.py"
+assert PRESET_SCRIPT_PATH.exists()
+
 GIZMO_PATH = Path(__file__).parent / "PrimariesInset.nk"
 assert GIZMO_PATH.exists()
 
@@ -47,18 +50,32 @@ def build_callback_string() -> str:
     return sanitize_nuke_script(combined_script)
 
 
+def build_preset_script() -> str:
+    base_script = PRESET_SCRIPT_PATH.read_text("utf-8")
+    return sanitize_nuke_script(base_script)
+
+
 def build():
     LOGGER.info(f"build started")
     base_gizmo = GIZMO_PATH.read_text("utf-8")
     knob_callback = build_callback_string()
+    preset_script = build_preset_script()
 
     new_gizmo = []
     callback_added = False
+    preset_added = False
+
     for line_index, line in enumerate(base_gizmo.split("\n")):
         if line.startswith(" knobChanged") and not callback_added:
             line = f' knobChanged "{knob_callback}"'
             callback_added = True
             LOGGER.debug(f"found knobChanged at line {line_index}")
+
+        elif "22 preset_apply" in line and not preset_added:
+            line = f' addUserKnob {{22 preset_apply l apply -STARTLINE T "{preset_script}"}}'
+            preset_added = True
+            LOGGER.debug(f"found preset_apply at line {line_index}")
+
         new_gizmo.append(line)
 
     new_gizmo = "\n".join(new_gizmo)
