@@ -24,6 +24,7 @@ Group {
  addUserKnob {7 inset_b l "inset B" t "inset blue primary towards whitepoint"}
  addUserKnob {26 "" +STARTLINE}
  addUserKnob {20 local_result_grp l "Outputs" n 1}
+ local_result_grp 0
  addUserKnob {41 primary_r_inset l "primary_r_inset" T gamut_inset.red_primary}
  addUserKnob {41 primary_g_inset l "primary_g_inset" T gamut_inset.green_primary}
  addUserKnob {41 primary_b_inset l "primary_b_inset" T gamut_inset.blue_primary}
