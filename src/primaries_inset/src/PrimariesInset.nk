@@ -964,6 +964,11 @@ Group {
    name MatrixInset
    xpos 0
    ypos 300
+   matrix {
+       {1 0 0}
+       {0 1 0}
+       {0 0 1}
+     }
   }
  Switch {
   inputs 2
