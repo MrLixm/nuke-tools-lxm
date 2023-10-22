@@ -1,46 +1,50 @@
 Group {
  name gamut_inset
  addUserKnob {20 User l GamutInset}
- addUserKnob {12 whitepoint l "whitepoint" +STARTLINE +NO_HANDLES}
- addUserKnob {6 whitepoint_show l "show" -STARTLINE}
- whitepoint_show true
- addUserKnob {26 "" +STARTLINE}
+ addUserKnob {12 whitepoint_src l "whitepoint_src" +STARTLINE +NO_HANDLES}
  addUserKnob {12 primary_src_r l "primary_src_r" +STARTLINE +NO_HANDLES}
  addUserKnob {12 primary_src_g l "primary_src_g" +STARTLINE +NO_HANDLES}
  addUserKnob {12 primary_src_b l "primary_src_b" +STARTLINE +NO_HANDLES}
  addUserKnob {26 "" +STARTLINE}
  addUserKnob {12 primary_inset_u_r l "primary_inset_u_r" +STARTLINE +NO_HANDLES}
  primary_inset_u_r {
-     {{lerp(primary_src_r.x,whitepoint.x,inset)}}
-     {{lerp(primary_src_r.y,whitepoint.y,inset)}}
+     {{lerp(primary_src_r.x,whitepoint_src.x,inset)}}
+     {{lerp(primary_src_r.y,whitepoint_src.y,inset)}}
    }
  addUserKnob {12 primary_inset_u_g l "primary_inset_u_g" +STARTLINE +NO_HANDLES}
  primary_inset_u_g {
-     {{lerp(primary_src_g.x,whitepoint.x,inset)}}
-     {{lerp(primary_src_g.y,whitepoint.y,inset)}}
+     {{lerp(primary_src_g.x,whitepoint_src.x,inset)}}
+     {{lerp(primary_src_g.y,whitepoint_src.y,inset)}}
    }
  addUserKnob {12 primary_inset_u_b l "primary_inset_u_b" +STARTLINE +NO_HANDLES}
  primary_inset_u_b {
-     {{lerp(primary_src_b.x,whitepoint.x,inset)}}
-     {{lerp(primary_src_b.y,whitepoint.y,inset)}}
+     {{lerp(primary_src_b.x,whitepoint_src.x,inset)}}
+     {{lerp(primary_src_b.y,whitepoint_src.y,inset)}}
    }
  addUserKnob {26 "" +STARTLINE}
+ addUserKnob {12 whitepoint_edited l "whitepoint_edited" +STARTLINE +NO_HANDLES}
+ whitepoint_edited {
+     {{whitepoint_src.x+whitepoint_offset_x}}
+     {{whitepoint_src.y+whitepoint_offset_y}}
+   }
  addUserKnob {12 red_primary l "red_primary" +STARTLINE +NO_HANDLES}
  red_primary {
-     {{lerp(primary_inset_u_r.x,whitepoint.x,inset_r)}}
-     {{lerp(primary_inset_u_r.y,whitepoint.y,inset_r)}}
+     {{lerp(primary_inset_u_r.x,whitepoint_src.x,inset_r)}}
+     {{lerp(primary_inset_u_r.y,whitepoint_src.y,inset_r)}}
    }
  addUserKnob {12 green_primary l "green_primary" +STARTLINE +NO_HANDLES}
  green_primary {
-     {{lerp(primary_inset_u_g.x,whitepoint.x,inset_g)}}
-     {{lerp(primary_inset_u_g.y,whitepoint.y,inset_g)}}
+     {{lerp(primary_inset_u_g.x,whitepoint_src.x,inset_g)}}
+     {{lerp(primary_inset_u_g.y,whitepoint_src.y,inset_g)}}
    }
  addUserKnob {12 blue_primary l "blue_primary" +STARTLINE +NO_HANDLES}
  blue_primary {
-     {{lerp(primary_inset_u_b.x,whitepoint.x,inset_b)}}
-     {{lerp(primary_inset_u_b.y,whitepoint.y,inset_b)}}
+     {{lerp(primary_inset_u_b.x,whitepoint_src.x,inset_b)}}
+     {{lerp(primary_inset_u_b.y,whitepoint_src.y,inset_b)}}
    }
  addUserKnob {26 "" +STARTLINE}
+ addUserKnob {6 whitepoint_show l "show whitepoint" +STARTLINE}
+ whitepoint_show true
  addUserKnob {7 point_size l "point_size" R 0 100}
  point_size 4
  addUserKnob {7 outline_width l "outline_width"}
@@ -50,9 +54,11 @@ Group {
  addUserKnob {7 inset_r l "inset_r" t "inset towards whitepoint"}
  addUserKnob {7 inset_g l "inset_g" t "inset towards whitepoint"}
  addUserKnob {7 inset_b l "inset_b" t "inset towards whitepoint"}
+ addUserKnob {7 whitepoint_offset_x l "whitepoint_offset_x" R -0.5 0.5}
+ addUserKnob {7 whitepoint_offset_y l "whitepoint_offset_y" R -0.5 0.5}
  addUserKnob {20 About}
  addUserKnob {26 toolName l name T GamutInset}
- addUserKnob {26 toolVersion l version T 0.1.1}
+ addUserKnob {26 toolVersion l version T 0.2.0}
  addUserKnob {26 toolAuthor l author T "<a style=\"color: rgb(200,200,200);\" href=\"https://mrlixm.github.io/\">Liam Collod</a>"}
  addUserKnob {26 toolDescription l description T "Reshape and plot the gamut of a colorspace on the CIE xy coordinate system."}
  addUserKnob {26 toolUrl l url T "<a style=\"color: rgb(200,200,200);\" href=\"https://github.com/MrLixm/Foundry_Nuke\">https://github.com/MrLixm/Foundry_Nuke</a>"}
@@ -344,8 +350,8 @@ Group {
    addUserKnob {20 User l CIExyPoint}
    addUserKnob {12 ciexy l "CIE coordinates" +STARTLINE +NO_HANDLES}
    ciexy {
-       {{parent.whitepoint.x}}
-       {{parent.whitepoint.y}}
+       {{parent.whitepoint_edited.x}}
+       {{parent.whitepoint_edited.y}}
      }
    addUserKnob {26 "" +STARTLINE}
    addUserKnob {19 color l "color"}
