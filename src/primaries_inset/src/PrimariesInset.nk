@@ -969,6 +969,7 @@ Group {
        {0 1 0}
        {0 0 1}
      }
+   invert true
   }
  Switch {
   inputs 2
