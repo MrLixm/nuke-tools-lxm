@@ -17,14 +17,12 @@ Group {
  point_size 10
  addUserKnob {7 outline_width l "outline_width"}
  outline_width 0.8
- addUserKnob {20 endGroup n -1}
  addUserKnob {20 About}
  addUserKnob {26 toolName l name T GamutPlot}
- addUserKnob {26 toolVersion l version T 0.1.0}
+ addUserKnob {26 toolVersion l version T 0.1.1}
  addUserKnob {26 toolAuthor l author T "<a style=\"color: rgb(200,200,200);\" href=\"https://mrlixm.github.io/\">Liam Collod</a>"}
  addUserKnob {26 toolDescription l description T "Plot the gamut of a colorspace on the CIE xy coordinate system."}
  addUserKnob {26 toolUrl l url T "<a style=\"color: rgb(200,200,200);\" href=\"https://github.com/MrLixm/Foundry_Nuke\">https://github.com/MrLixm/Foundry_Nuke</a>"}
- addUserKnob {20 endGroup n -1}
 }
  Input {
   inputs 0
@@ -47,14 +45,12 @@ Group {
   size {{parent.point_size}}
   addUserKnob {7 outline_width l "outline_width" t "in ratio of the size"}
   outline_width {{parent.outline_width}}
-  addUserKnob {20 endGroup n -1}
   addUserKnob {20 About}
   addUserKnob {26 toolName l name T CIExyPoint}
-  addUserKnob {26 toolVersion l version T 0.1.0}
+  addUserKnob {26 toolVersion l version T 0.1.1}
   addUserKnob {26 toolAuthor l author T "<a style=\"color: rgb(200,200,200);\" href=\"https://mrlixm.github.io/\">Liam Collod</a>"}
   addUserKnob {26 toolDescription l description T "Plot a point in the CIE xy coordinate system."}
   addUserKnob {26 toolUrl l url T "<a style=\"color: rgb(200,200,200);\" href=\"https://github.com/MrLixm/Foundry_Nuke\">https://github.com/MrLixm/Foundry_Nuke</a>"}
-  addUserKnob {20 endGroup n -1}
  }
   Input {
    inputs 0
@@ -89,7 +85,6 @@ Group {
        {{parent.size.w}}
        {{parent.size.h}}
      }
-   addUserKnob {20 endGroup n -1}
   }
   Radial {
    name point_inner
@@ -118,7 +113,6 @@ Group {
    size {{parent.size*outline_width}}
    addUserKnob {7 outline_width l "outline_width"}
    outline_width {{parent.outline_width}}
-   addUserKnob {20 endGroup n -1}
   }
   Output {
    name Output1
@@ -141,14 +135,12 @@ Group {
   size {{parent.point_size}}
   addUserKnob {7 outline_width l "outline_width" t "in ratio of the size"}
   outline_width {{parent.outline_width}}
-  addUserKnob {20 endGroup n -1}
   addUserKnob {20 About}
   addUserKnob {26 toolName l name T CIExyPoint}
-  addUserKnob {26 toolVersion l version T 0.1.0}
+  addUserKnob {26 toolVersion l version T 0.1.1}
   addUserKnob {26 toolAuthor l author T "<a style=\"color: rgb(200,200,200);\" href=\"https://mrlixm.github.io/\">Liam Collod</a>"}
   addUserKnob {26 toolDescription l description T "Plot a point in the CIE xy coordinate system."}
   addUserKnob {26 toolUrl l url T "<a style=\"color: rgb(200,200,200);\" href=\"https://github.com/MrLixm/Foundry_Nuke\">https://github.com/MrLixm/Foundry_Nuke</a>"}
-  addUserKnob {20 endGroup n -1}
  }
   Input {
    inputs 0
@@ -183,7 +175,6 @@ Group {
        {{parent.size.w}}
        {{parent.size.h}}
      }
-   addUserKnob {20 endGroup n -1}
   }
   Radial {
    name point_inner
@@ -212,7 +203,6 @@ Group {
    size {{parent.size*outline_width}}
    addUserKnob {7 outline_width l "outline_width"}
    outline_width {{parent.outline_width}}
-   addUserKnob {20 endGroup n -1}
   }
   Output {
    name Output1
@@ -235,14 +225,12 @@ Group {
   size {{parent.point_size}}
   addUserKnob {7 outline_width l "outline_width" t "in ratio of the size"}
   outline_width {{parent.outline_width}}
-  addUserKnob {20 endGroup n -1}
   addUserKnob {20 About}
   addUserKnob {26 toolName l name T CIExyPoint}
-  addUserKnob {26 toolVersion l version T 0.1.0}
+  addUserKnob {26 toolVersion l version T 0.1.1}
   addUserKnob {26 toolAuthor l author T "<a style=\"color: rgb(200,200,200);\" href=\"https://mrlixm.github.io/\">Liam Collod</a>"}
   addUserKnob {26 toolDescription l description T "Plot a point in the CIE xy coordinate system."}
   addUserKnob {26 toolUrl l url T "<a style=\"color: rgb(200,200,200);\" href=\"https://github.com/MrLixm/Foundry_Nuke\">https://github.com/MrLixm/Foundry_Nuke</a>"}
-  addUserKnob {20 endGroup n -1}
  }
   Input {
    inputs 0
@@ -277,7 +265,6 @@ Group {
        {{parent.size.w}}
        {{parent.size.h}}
      }
-   addUserKnob {20 endGroup n -1}
   }
   Radial {
    name point_inner
@@ -306,7 +293,6 @@ Group {
    size {{parent.size*outline_width}}
    addUserKnob {7 outline_width l "outline_width"}
    outline_width {{parent.outline_width}}
-   addUserKnob {20 endGroup n -1}
   }
   Output {
    name Output1
@@ -335,14 +321,12 @@ Group {
    size {{parent.point_size}}
    addUserKnob {7 outline_width l "outline_width" t "in ratio of the size"}
    outline_width {{parent.outline_width}}
-   addUserKnob {20 endGroup n -1}
    addUserKnob {20 About}
    addUserKnob {26 toolName l name T CIExyPoint}
-   addUserKnob {26 toolVersion l version T 0.1.0}
+   addUserKnob {26 toolVersion l version T 0.1.1}
    addUserKnob {26 toolAuthor l author T "<a style=\"color: rgb(200,200,200);\" href=\"https://mrlixm.github.io/\">Liam Collod</a>"}
    addUserKnob {26 toolDescription l description T "Plot a point in the CIE xy coordinate system."}
    addUserKnob {26 toolUrl l url T "<a style=\"color: rgb(200,200,200);\" href=\"https://github.com/MrLixm/Foundry_Nuke\">https://github.com/MrLixm/Foundry_Nuke</a>"}
-   addUserKnob {20 endGroup n -1}
   }
    Input {
     inputs 0
@@ -377,7 +361,6 @@ Group {
         {{parent.size.w}}
         {{parent.size.h}}
       }
-    addUserKnob {20 endGroup n -1}
    }
    Radial {
     name point_inner
@@ -406,7 +389,6 @@ Group {
     size {{parent.size*outline_width}}
     addUserKnob {7 outline_width l "outline_width"}
     outline_width {{parent.outline_width}}
-    addUserKnob {20 endGroup n -1}
    }
    Output {
     name Output1
