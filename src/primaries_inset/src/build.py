@@ -8,25 +8,24 @@ from pathlib import Path
 import gamut_convert
 
 LOGGER = logging.getLogger(__name__)
+THIS_DIR = Path(__file__).parent
 
-GAMUT_CONVERT_PATH = Path(gamut_convert.__file__)
-assert GAMUT_CONVERT_PATH.exists()
 
-KNOB_CALLBACK_PATH = (
-    Path(__file__).parent / "PrimariesInset" / "knob-changed-callback.py"
-)
-assert KNOB_CALLBACK_PATH.exists()
+class BuildPaths:
+    module_gamut_convert = Path(gamut_convert.__file__)
+    assert module_gamut_convert.exists()
 
-PRESET_SCRIPT_PATH = (
-    Path(__file__).parent / "PrimariesInset" / "colorspace-preset-script.py"
-)
-assert PRESET_SCRIPT_PATH.exists()
+    script_knob_callback = THIS_DIR / "PrimariesInset" / "knob-changed-callback.py"
+    assert script_knob_callback.exists()
 
-GIZMO_PATH = Path(__file__).parent / "PrimariesInset" / "PrimariesInset.nk"
-assert GIZMO_PATH.exists()
+    script_presets = THIS_DIR / "PrimariesInset" / "colorspace-preset-script.py"
+    assert script_presets.exists()
 
-BUILD_PATH = Path(__file__).parent.parent
-BUILD_GIZMO = BUILD_PATH / "PrimariesInset.nk"
+    src_gizmo = THIS_DIR / "PrimariesInset" / "PrimariesInset.nk"
+    assert src_gizmo.exists()
+
+    build_dir = THIS_DIR.parent
+    build_gizmo = build_dir / "PrimariesInset.nk"
 
 
 def sanitize_nuke_script(script: str) -> str:
@@ -40,8 +39,8 @@ def sanitize_nuke_script(script: str) -> str:
 
 
 def build_callback_string() -> str:
-    base_script = GAMUT_CONVERT_PATH.read_text("utf-8")
-    nuke_script = KNOB_CALLBACK_PATH.read_text("utf-8")
+    base_script = BuildPaths.module_gamut_convert.read_text("utf-8")
+    nuke_script = BuildPaths.script_knob_callback.read_text("utf-8")
     # remove gamut-convert imports
     nuke_script = "\n".join(
         [
@@ -55,13 +54,13 @@ def build_callback_string() -> str:
 
 
 def build_preset_script() -> str:
-    base_script = PRESET_SCRIPT_PATH.read_text("utf-8")
+    base_script = BuildPaths.script_presets.read_text("utf-8")
     return sanitize_nuke_script(base_script)
 
 
 def build():
     LOGGER.info(f"build started")
-    base_gizmo = GIZMO_PATH.read_text("utf-8")
+    base_gizmo = BuildPaths.src_gizmo.read_text("utf-8")
     knob_callback = build_callback_string()
     preset_script = build_preset_script()
 
@@ -83,8 +82,8 @@ def build():
         new_gizmo.append(line)
 
     new_gizmo = "\n".join(new_gizmo)
-    LOGGER.info(f"writting {BUILD_GIZMO}")
-    BUILD_GIZMO.write_text(new_gizmo, "utf-8")
+    LOGGER.info(f"writting {BuildPaths.src_gizmo}")
+    BuildPaths.src_gizmo.write_text(new_gizmo, "utf-8")
     LOGGER.info("build finished")
 
 
