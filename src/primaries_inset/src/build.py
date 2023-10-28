@@ -12,13 +12,17 @@ LOGGER = logging.getLogger(__name__)
 GAMUT_CONVERT_PATH = Path(gamut_convert.__file__)
 assert GAMUT_CONVERT_PATH.exists()
 
-KNOB_CALLBACK_PATH = Path(__file__).parent / "knob-changed-callback.py"
+KNOB_CALLBACK_PATH = (
+    Path(__file__).parent / "PrimariesInset" / "knob-changed-callback.py"
+)
 assert KNOB_CALLBACK_PATH.exists()
 
-PRESET_SCRIPT_PATH = Path(__file__).parent / "colorspace-preset-script.py"
+PRESET_SCRIPT_PATH = (
+    Path(__file__).parent / "PrimariesInset" / "colorspace-preset-script.py"
+)
 assert PRESET_SCRIPT_PATH.exists()
 
-GIZMO_PATH = Path(__file__).parent / "PrimariesInset.nk"
+GIZMO_PATH = Path(__file__).parent / "PrimariesInset" / "PrimariesInset.nk"
 assert GIZMO_PATH.exists()
 
 BUILD_PATH = Path(__file__).parent.parent
