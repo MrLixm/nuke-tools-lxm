@@ -1,6 +1,5 @@
 Group {
  name PrimariesInset1
- knobChanged "import copy\n\n\n\"\"\" ------------------------------------------------------------------------------------\nmaths\n\"\"\"\n\n\ndef _matrix_eliminate(r1, r2, col, target=0):\n    \"\"\"\n    Part of Gauss-Jordan elimination algorithm for matrix inversion.\n\n    https://stackoverflow.com/a/61741074/13806195\n    \"\"\"\n    fac = (r2[col] - target) / r1[col]\n    for i in range(len(r2)):\n        r2[i] -= fac * r1[i]\n\n\ndef _matrix_gauss(a):\n    \"\"\"\n    Part of Gauss-Jordan elimination algorithm for matrix inversion.\n\n    https://stackoverflow.com/a/61741074/13806195\n    \"\"\"\n    for i in range(len(a)):\n        if a[i][i] == 0:\n            for j in range(i + 1, len(a)):\n                if a[i][j] != 0:\n                    a[i], a[j] = a[j], a[i]\n                    break\n            else:\n                raise ValueError(\"Matrix is not invertible\")\n        for j in range(i + 1, len(a)):\n            _matrix_eliminate(a[i], a[j], i)\n    for i in range(len(a) - 1, -1, -1):\n        for j in range(i - 1, -1, -1):\n            _matrix_eliminate(a[i], a[j], i)\n    for i in range(len(a)):\n        _matrix_eliminate(a[i], a[i], i, target=1)\n    return a\n\n\nclass BaseMatrix(object):\n    \"\"\"\n    \"Square matrix\" of arbitrary size.\n\n    Square means same number of rows and columns.\n\n    Intended to be subclassed.\n    \"\"\"\n\n    size = 0\n    \"\"\"\n    MUST be overriden in subclasses\n    \"\"\"\n\n    def __init__(self, *args):\n        assert self.size != 0\n        if not self.size * self.size == len(args):\n            raise ValueError(\n                \"Not enough argument provided: expected \{\} got \{\}\"\n                \"\".format(self.size * self.size, len(args))\n            )\n        self._array = [\n            list(args[self.size * i : self.size * (i + 1)]) for i in range(self.size)\n        ]  # type: list[list[float]]\n\n    def __repr__(self):\n        flatten = sum(self._array, [])\n        return \"\{\}(\{\})\".format(self.__class__.__name__, \",\".join(map(str, flatten)))\n\n    def __eq__(self, other):\n        if isinstance(other, self.__class__):\n            return self._array == other._array\n        return False\n\n    def __mul__(self, other):\n        if isinstance(other, self.__class__):\n            return self.from_2dsequence(\n                [\n                    [sum(a * b for a, b in zip(r, c)) for c in zip(*other.as_2Dlist())]\n                    for r in self.as_2Dlist()\n                ]\n            )\n        raise TypeError(\n            \"Cannot multiple \{\} by \{\}\".format(self.__class__, other.__class__)\n        )\n\n    def as_2Dlist(self):\n        # type: () -> list[list[float]]\n        return copy.deepcopy(self._array)\n\n    def as_2Dtuple(self):\n        # type: () -> tuple[tuple[float, ...], ...]\n        return tuple([tuple(row) for row in self._array])\n\n    def determinant(self):\n        \"\"\"\n        Returns the determinant of this matrix.\n        \"\"\"\n        determinant = 1\n        m = self.as_2Dlist()\n\n        for i in range(self.size):\n            for j in range(i + 1, self.size):\n                if m[i][i] == 0:\n                    m[i][i] = 1\n                x = m[j][i] / m[i][i]\n                for k in range(self.size):\n                    m[j][k] -= x * m[i][k]\n\n        for i in range(self.size):\n            determinant *= m[i][i]\n\n        return determinant\n\n    def invert(self):\n        \"\"\"\n        Invert this matrix on place.\n        \"\"\"\n        self._array = self.inverted()._array\n\n    def inverted(self):\n        \"\"\"\n        Return the inverse of this matrix.\n\n        Use Gauss-Jordan elimination algorithm.\n\n        SRC: https://stackoverflow.com/a/61741074/13806195\n        \"\"\"\n        buffer_m = [[] for _ in self._array]\n        for i, row in enumerate(self._array):\n            buffer_m[i].extend(row + [0] * i + [1] + [0] * (self.size - i - 1))\n\n        _matrix_gauss(buffer_m)\n        buffer_m = [buffer_m[i][len(buffer_m[i]) // 2 :] for i in range(len(buffer_m))]\n        return self.from_2dsequence(buffer_m)\n\n    def set_diagonal(self, vector):\n        \"\"\"\n        Set the diagonal row of the given matrix with given vector\n        \"\"\"\n        self._array = self.with_diagonal(vector)._array\n\n    def transpose(self):\n        \"\"\"\n        Return a new transposed matrix by swapping rows and cols\n        \"\"\"\n        self._array = self.transposed()._array\n\n    def transposed(self):\n        \"\"\"\n        Return a new transposed matrix by swapping rows and cols\n        \"\"\"\n        return self.from_2dsequence([list(r) for r in zip(*self.as_2Dlist())])\n\n    def with_diagonal(self, vector):\n        \"\"\"\n        Set the diagonal row of the given matrix with given vector\n\n        Args:\n            vector(BaseVector): vector instance.\n        \"\"\"\n        if not vector.size == self.size:\n            raise TypeError(\n                \"Matrix.size:\{\} != Vector.size:\{\}\".format(self.size, vector.size)\n            )\n\n        new_array = self.as_2Dlist()\n        for size_index in range(len(new_array)):\n            new_array[size_index][size_index] = vector[size_index]\n\n        return self.from_2dsequence(new_array)\n\n    @classmethod\n    def from_2dsequence(cls, source):\n        \"\"\"\n        Args:\n            source(list[list[float]] or tuple):\n                a one-level-nested list or tuple of floats.\n                must correspond to the expected size of the matrix\n\n        Returns:\n            new instance\n        \"\"\"\n        flatten = sum(source, [] if isinstance(source, list) else tuple())\n        return cls(*flatten)\n\n    @classmethod\n    def init_with_zeros(cls):\n        \"\"\"\n        Create a matrix instance full of zeros.\n        \"\"\"\n        return cls(*([0.0] * (cls.size * cls.size)))\n\n    @classmethod\n    def init_as_identity(cls):\n        \"\"\"\n        Create an indentity matrix instance.\n        \"\"\"\n        instance = cls.init_with_zeros()\n        vector_class = BaseVector.get_class_for_size(cls.size)\n        if not vector_class:\n            raise RuntimeError(\"No Vector class found for size=\{\}\".format(cls.size))\n\n        instance.set_diagonal(vector_class(*([1.0] * cls.size)))\n        return instance\n\n\nclass Matrix2x2(BaseMatrix):\n    size = 2\n\n\nclass Matrix3x3(BaseMatrix):\n    size = 3\n\n\nclass Matrix4x4(BaseMatrix):\n    size = 4\n\n\nclass BaseVector(object):\n    \"\"\"\n    Define an axis in arbitrary multidimensional space.\n\n    Intended to be subclassed.\n    \"\"\"\n\n    size = 0\n    \"\"\"\n    MUST be overriden in subclasses\n    \"\"\"\n\n    def __init__(self, *args):\n        assert self.size != 0\n        if not self.size == len(args):\n            raise ValueError(\n                \"Not enough argument provided: expected \{\} got \{\}\"\n                \"\".format(self.size, len(args))\n            )\n        self._array = list(args)  # type: list[float]\n\n    def __repr__(self):\n        return \"\{\}(\{\})\".format(self.__class__.__name__, \",\".join(map(str, self._array)))\n\n    def __eq__(self, other):\n        if isinstance(other, self.__class__):\n            return self._array == other._array\n        return False\n\n    def __getitem__(self, key):\n        \"\"\"\n        Returns the element at key in the vector.\n        \"\"\"\n        return self._array[key]\n\n    def __mul__(self, other):\n        if isinstance(other, self.__class__):\n            other_array = other.as_2Dlist()\n            this_array = self.as_2Dlist()\n            new_array = [this_array[i] * other_array[i] for i in range(self.size)]\n            return self.__class__(*new_array)\n\n        # vector/matrix dot product\n        elif isinstance(other, BaseMatrix):\n            new_array = [\n                sum(x * y for x, y in zip(r, self.as_2Dlist()))\n                for r in other.as_2Dlist()\n            ]\n            return self.__class__(*new_array)\n\n        raise TypeError(\n            \"Cannot multiple \{\} by \{\}\".format(self.__class__, other.__class__)\n        )\n\n    def as_2Dlist(self):\n        # type: () -> list[float]\n        return copy.copy(self._array)\n\n    def as_2Dtuple(self):\n        # type: () -> tuple[float, ...]\n        return tuple(self._array)\n\n    @classmethod\n    def get_class_for_size(cls, size):\n        # type: (int) -> BaseVector | None\n        \"\"\"\n        Return the Vector class that correspond to the given size.\n\n        Example a size of 3 should return a Vector3 class.\n        \"\"\"\n        for subclass in cls.__subclasses__():\n            if subclass.size == size:\n                return subclass\n        return None\n\n\nclass Vector2(BaseVector):\n    size = 2\n\n\nclass Vector3(BaseVector):\n    size = 3\n\n\nclass Vector4(BaseVector):\n    size = 4\n\n\n\"\"\" ------------------------------------------------------------------------------------\ncolor-science\n\"\"\"\n\nChromaticitiesType = tuple[\n    tuple[float, float],\n    tuple[float, float],\n    tuple[float, float],\n]\nWhitepointType = tuple[float, float]\n\n\nclass Gamut(object):\n    \"\"\"\n    Simple dataclass to group a gamut and its whitepoint.\n\n    Args:\n        chromaticities: primaries in CIE xy coordinates as [[red.x, red.y], [green...], [blue...]]\n        whitepoint: reference white in CIE xy coordiates as [x, y]\n    \"\"\"\n\n    def __init__(self, chromaticities, whitepoint):\n        # type: (ChromaticitiesType, WhitepointType) -> None\n        self._chromaticities = chromaticities\n        self._whitepoint = whitepoint\n\n    @property\n    def chromaticities(self) -> ChromaticitiesType:\n        return self._chromaticities\n\n    @property\n    def whitepoint(self) -> WhitepointType:\n        return self._whitepoint\n\n    def are_chromaticities_identity(self):\n        \"\"\"\n        Returns:\n            True if the chromaticities correspond cover the whole CIE xy space.\n        \"\"\"\n        return self._chromaticities == [[1.0, 0.0], [0.0, 1.0], [0.0, 0.0]]\n\n\ndef compute_normalized_primary_matrix(chromaticities, whitepoint):\n    # type: (ChromaticitiesType, WhitepointType) -> Matrix3x3\n    \"\"\"\n    Calculate the normalized primaries matrix for the specified chromaticities and whitepoint.\n\n    Derived from:\n        SMPTE Recommended Practice - Derivation of Basic Television Color Equations\n        https://ieeexplore.ieee.org/document/7291155\n    \"\"\"\n    # tuple[tuple] to list[list]\n    chs = [list(row) for row in chromaticities]\n\n    # compute z coordinates\n    # 3x2 -> 3x3 matrix conversion\n    for c in chs:\n        c.append(1.0 - c[0] - c[1])\n    chs = Matrix3x3.from_2dsequence(chs)\n    Wz = 1 - whitepoint[0] - whitepoint[1]\n\n    P = chs.transposed()\n    W = Vector3(*[whitepoint[0] / whitepoint[1], 1.0, Wz / whitepoint[1]])\n    C = W * P.inverted()\n    Cm = Matrix3x3.init_with_zeros().with_diagonal(C)\n    return P * Cm\n\n\ndef get_conversion_matrix(gamut_src, gamut_dst):\n    # type: (Gamut, Gamut) -> Matrix3x3\n    \"\"\"\n    Get the 3x3 matrix to convert the given source gamut to given destination gamut.\n\n    note that NO chromatic adaption is performed.\n    \"\"\"\n\n    src_to_xyz = Matrix3x3.init_as_identity()\n    if not gamut_src.are_chromaticities_identity():\n        src_to_xyz = compute_normalized_primary_matrix(\n            gamut_src.chromaticities, gamut_src.whitepoint\n        )\n\n    dst_to_xyz = Matrix3x3.init_as_identity()\n    if not gamut_dst.are_chromaticities_identity():\n        dst_to_xyz = compute_normalized_primary_matrix(\n            gamut_dst.chromaticities, gamut_dst.whitepoint\n        )\n\n    return dst_to_xyz.inverted() * src_to_xyz\n\nimport logging\n\nimport nuke\n\nLOGGER = logging.getLogger(__name__)\n\nCOLORSCIENCE_KNOBS = [\n    \"primary_r\",\n    \"primary_g\",\n    \"primary_b\",\n    \"whitepoint\",\n    \"inset\",\n    \"inset_r\",\n    \"inset_g\",\n    \"inset_b\",\n    \"whitepoint_offset_x\",\n    \"whitepoint_offset_y\",\n]\n\n\ndef main(node, knob):\n    # type: (nuke.Node, nuke.Knob) -> None\n    if knob.name() not in COLORSCIENCE_KNOBS:\n        return\n\n    primary_r = tuple(node[\"primary_r\"].getValue())  # type: tuple[float, float]\n    primary_g = tuple(node[\"primary_g\"].getValue())  # type: tuple[float, float]\n    primary_b = tuple(node[\"primary_b\"].getValue())  # type: tuple[float, float]\n    chromaticities = (primary_r, primary_g, primary_b)\n    whitepoint = tuple(node[\"whitepoint\"].getValue())  # type: tuple[float, float]\n    src_gamut = Gamut(chromaticities, whitepoint)\n\n    primary_r = tuple(node[\"primary_r_inset\"].getValue())  # type: tuple[float, float]\n    primary_g = tuple(node[\"primary_g_inset\"].getValue())  # type: tuple[float, float]\n    primary_b = tuple(node[\"primary_b_inset\"].getValue())  # type: tuple[float, float]\n    chromaticities = (primary_r, primary_g, primary_b)\n    whitepoint = tuple(node[\"whitepoint_inset\"].getValue())  # type: tuple[float, float]\n    dst_gamut = Gamut(chromaticities, whitepoint)\n\n    matrix = get_conversion_matrix(src_gamut, dst_gamut)\n    matrix = matrix.as_2Dlist()\n    matrix_flat = sum(matrix, [])\n\n    LOGGER.debug(\"setting node \{\} with matrix \{\}\".format(node.name(), matrix))\n    matrix_knob = node[\"matrix\"]\n    matrix_knob.setValue(matrix_flat)\n\n\nmain(nuke.thisNode(), nuke.thisKnob())\n"
  tile_color 0x3a755e00
  note_font_color 0xefefefff
  addUserKnob {20 User l GamutPlot}
@@ -19,33 +18,40 @@ Group {
  addUserKnob {26 "" +STARTLINE}
  addUserKnob {12 whitepoint l "whitepoint" +STARTLINE +NO_HANDLES}
  whitepoint {0.3127 0.329}
- addUserKnob {6 whitepoint_show l "show" -STARTLINE}
- whitepoint_show true
+ addUserKnob {26 "" +STARTLINE}
+ addUserKnob {26 txt_options l "" +STARTLINE T "<h1> Options</h1>"}
+ addUserKnob {6 invert_inset l "Invert Inset (Outset)" +STARTLINE}
+ addUserKnob {7 inset l "inset" t "inset all primaries towards whitepoint"}
+ addUserKnob {7 u_inset_r l "inset R" t "inset red primary towards whitepoint"}
+ addUserKnob {7 u_inset_g l "inset G" t "inset green primary towards whitepoint"}
+ addUserKnob {7 u_inset_b l "inset B" t "inset blue primary towards whitepoint"}
+ addUserKnob {7 rotate_r l "rotate R" t "rotate the red primary around the whitepoint; in degrees." R -90 90}
+ addUserKnob {7 rotate_g l "rotate G" t "rotate the green primary around the whitepoint; in degrees." R -90 90}
+ addUserKnob {7 rotate_b l "rotate B" t "rotate the blue primary around the whitepoint; in degrees." R -90 90}
+ addUserKnob {26 txt_whitepoint l "" +STARTLINE T "<h2> Whitepoint</h2>"}
+ addUserKnob {7 whitepoint_pre_offset_x l "pre offset x" t "creative shift of the whitepoint; affect inset" R -0.5 0.5}
+ addUserKnob {7 whitepoint_pre_offset_y l "pre offset y" t "creative shift of the whitepoint; affect inset" R -0.5 0.5}
+ addUserKnob {7 whitepoint_post_offset_x l "post offset x" t "creative shift of the whitepoint; does NOT affect inset and might lead to hue shifts" R -0.5 0.5}
+ addUserKnob {7 whitepoint_post_offset_y l "post offset y" t "creative shift of the whitepoint; does NOT affect inset and might lead to hue shifts" R -0.5 0.5}
  addUserKnob {26 "" +STARTLINE}
  addUserKnob {26 txt_plot l "" +STARTLINE T "<h1> Plot </h1>"}
  addUserKnob {6 plot_show l "show"}
  addUserKnob {7 point_size l "point size" R 0 100}
- point_size 10
- addUserKnob {26 "" +STARTLINE}
- addUserKnob {26 txt_options l "" +STARTLINE T "<h1> Options</h1>"}
- addUserKnob {7 inset l "inset" t "inset all primaries towards whitepoint"}
- addUserKnob {7 inset_r l "inset R" t "inset red primary towards whitepoint"}
- addUserKnob {7 inset_g l "inset G" t "inset green primary towards whitepoint"}
- addUserKnob {7 inset_b l "inset B" t "inset blue primary towards whitepoint"}
- addUserKnob {7 whitepoint_offset_x l "whitepoint offset x" R -0.5 0.5}
- addUserKnob {7 whitepoint_offset_y l "whitepoint offset y" R -0.5 0.5}
- addUserKnob {26 "" +STARTLINE}
- addUserKnob {20 local_result_grp l "Outputs" n 1}
- local_result_grp 0
- addUserKnob {41 primary_r_inset l "primary_r_inset" T gamut_inset.red_primary}
- addUserKnob {41 primary_g_inset l "primary_g_inset" T gamut_inset.green_primary}
- addUserKnob {41 primary_b_inset l "primary_b_inset" T gamut_inset.blue_primary}
- addUserKnob {41 whitepoint_inset l "whitepoint_inset" T gamut_inset.whitepoint_edited}
- addUserKnob {41 matrix l "matrix" t "conversion matrix that applies the inset" T MatrixInset.matrix}
- addUserKnob {20 endGroup n -1}
+ point_size 15
+ addUserKnob {7 point_outline_scale l "outline scale" R 0 1}
+ point_outline_scale 0.75
+ addUserKnob {7 plot_margins l "margins" R 0 500}
+ plot_margins 150
+ addUserKnob {20 _Private}
+ addUserKnob {7 inset_r}
+ inset_r {{"min(u_inset_r + inset, 1)"}}
+ addUserKnob {7 inset_g}
+ inset_g {{"min(u_inset_g + inset, 1)"}}
+ addUserKnob {7 inset_b}
+ inset_b {{"min(u_inset_b + inset, 1)"}}
  addUserKnob {20 About}
  addUserKnob {26 toolName l name T PrimariesInset}
- addUserKnob {26 toolVersion l version T 0.3.2}
+ addUserKnob {26 toolVersion l version T 0.5.1}
  addUserKnob {26 toolAuthor l author T "<a style=\"color: rgb(200,200,200);\" href=\"https://mrlixm.github.io/\">Liam Collod</a>"}
  addUserKnob {26 toolDescription l description T "Reshape a colorspace gamut and plot it on the CIE xy space."}
  addUserKnob {26 toolUrl l url T "<a style=\"color: rgb(200,200,200);\" href=\"https://github.com/MrLixm/Foundry_Nuke\">https://github.com/MrLixm/Foundry_Nuke</a>"}
@@ -58,949 +64,112 @@ Group {
  }
  set N1aabb660 [stack 0]
   Constant {
-   format "512 512 0 0 512 512 1 sqaure_512"
+   format "1024 1024 0 0 1024 1024 1 square_1k"
    name GraphArea
-   xpos 100
+   xpos 200
    ypos 0
    postage_stamp false
   }
-  AdjBBox {
-   name AdjBBox1
-   xpos 100
-   ypos 50
-   numpixels 90
-  }
-  Group {
-   name gamut_define
-   xpos 100
-   ypos 100
-   addUserKnob {20 User l GamutPlot}
-   addUserKnob {12 red_primary l "red_primary" +STARTLINE +NO_HANDLES}
-   red_primary {
-       {{parent.primary_r.x}}
-       {{parent.primary_r.y}}
+  BlinkScript {
+   inputs 1
+   recompileCount 1
+   KernelDescription "2 \"InsetPrimariesPlot\" iterate pixelWise 3bc84fa54f1eb25c04263d3718a75980587cf419990376fb798e4214d9b52548 2 \"src\" Read Point \"dst\" Write Point 16 \"u_src_primary_r\" Float 2 AAAAAAAAAAA= \"u_src_primary_g\" Float 2 AAAAAAAAAAA= \"u_src_primary_b\" Float 2 AAAAAAAAAAA= \"u_src_whitepoint\" Float 2 AAAAAAAAAAA= \"u_inset_r\" Float 1 AAAAAA== \"u_inset_g\" Float 1 AAAAAA== \"u_inset_b\" Float 1 AAAAAA== \"u_rotate_r\" Float 1 AAAAAA== \"u_rotate_g\" Float 1 AAAAAA== \"u_rotate_b\" Float 1 AAAAAA== \"u_invert\" Bool 1 AA== \"u_whitepoint_pre_offset\" Float 2 AAAAAAAAAAA= \"u_whitepoint_post_offset\" Float 2 AAAAAAAAAAA= \"u_point_scale\" Float 1 AABwQQ== \"u_outline_scale\" Float 1 AABAPw== \"u_margins\" Float 1 AABIQg== 16 \"u_src_primary_r\" 2 1 \"u_src_primary_g\" 2 1 \"u_src_primary_b\" 2 1 \"u_src_whitepoint\" 2 1 \"u_inset_r\" 1 1 \"u_inset_g\" 1 1 \"u_inset_b\" 1 1 \"u_rotate_r\" 1 1 \"u_rotate_g\" 1 1 \"u_rotate_b\" 1 1 \"u_invert\" 1 1 \"u_whitepoint_pre_offset\" 2 1 \"u_whitepoint_post_offset\" 2 1 \"u_point_scale\" 1 1 \"u_outline_scale\" 1 1 \"u_margins\" 1 1 2 \"pi\" Float 1 1 AAAAAA== \"workspace_scale\" Float 2 1 AAAAAAAAAAA="
+   kernelSource "// version 3\nkernel InsetPrimariesPlot : ImageComputationKernel<ePixelWise>\n\{\n    Image<eRead, eAccessPoint, eEdgeClamped> src;\n    Image<eWrite> dst;\n\n    param:\n        float2 u_src_primary_r;\n        float2 u_src_primary_g;\n        float2 u_src_primary_b;\n        float2 u_src_whitepoint;\n        float u_inset_r;\n        float u_inset_g;\n        float u_inset_b;\n        float u_rotate_r;\n        float u_rotate_g;\n        float u_rotate_b;\n        bool u_invert;\n        float2 u_whitepoint_pre_offset;\n        float2 u_whitepoint_post_offset;\n        float u_point_scale;\n        float u_outline_scale;\n        float u_margins;\n\n    local:\n        float pi;\n        float2 workspace_scale;\n\n    void define()\{\n        defineParam(u_point_scale, \"u_point_scale\", 15.0f);\n        defineParam(u_outline_scale, \"u_outline_scale\", 0.75f);\n        defineParam(u_margins, \"u_margins\", 50.0f);\n    \}\n\n    float lerp(float a1, float a2, float amount)\{\n        // linear interpolation between 2 values\n        return (1.0 - amount) * a1 + amount * a2;\n    \}\n\n    float2 rotate_point_around(float2 point, float angle, float2 center)\{\n        // angle: in radians\n        // https://stackoverflow.com/a/2259502/13806195\n\n        float s = sin(angle);\n        float c = cos(angle);\n\n        // translate point back to origin:\n        point.x -= center.x;\n        point.y -= center.y;\n\n        // rotate point\n        float xnew = point.x * c - point.y * s;\n        float ynew = point.x * s + point.y * c;\n\n        // translate point back:\n        point.x = xnew + center.x;\n        point.y = ynew + center.y;\n        return point;\n    \}\n\n    float3x3 get_inset_colorspace(\n        float2 primary_r,\n        float2 primary_g,\n        float2 primary_b,\n        float2 whitepoint,\n        float inset_r,\n        float inset_g,\n        float inset_b\n    )\{\n        float2 new_primary_r;\n        float2 new_primary_g;\n        float2 new_primary_b;\n\n        new_primary_r.x = lerp(primary_r.x, whitepoint.x, inset_r);\n        new_primary_r.y = lerp(primary_r.y, whitepoint.y, inset_r);\n        new_primary_g.x = lerp(primary_g.x, whitepoint.x, inset_g);\n        new_primary_g.y = lerp(primary_g.y, whitepoint.y, inset_g);\n        new_primary_b.x = lerp(primary_b.x, whitepoint.x, inset_b);\n        new_primary_b.y = lerp(primary_b.y, whitepoint.y, inset_b);\n\n        float3x3 out;\n        out[0][0] = new_primary_r.x;\n        out[0][1] = new_primary_r.y;\n        out[1][0] = new_primary_g.x;\n        out[1][1] = new_primary_g.y;\n        out[2][0] = new_primary_b.x;\n        out[2][1] = new_primary_b.y;\n        return out;\n\n    \}\n\n    float draw_point(float2 center, float radius)\{\n        // all units in pixel space\n        float point = radius - sqrt(pow(center.x, 2) + pow(center.y, 2));\n        return clamp(point, 0.0f, 1.0f);\n    \}\n\n    float draw_torus(float2 center, float radius, float inner_radius)\{\n        // all units in pixel space\n        return draw_point(center, radius) * (1 - draw_point(center, inner_radius));\n    \}\n\n    float2 convert_CIExy_to_workspace(float2 CIExy, float2 pos)\{\n        // CIExy is 0-1 range\n        // output in pixel space base on workspace_scale\n        return float2(pos.x, pos.y) - (\n            CIExy * workspace_scale + float2(u_margins, u_margins)\n        );\n    \}\n\n    void init(int2 pos) \{\n        workspace_scale = float2(\n            src.bounds.width() - u_margins * 2,\n            src.bounds.height() - u_margins * 2\n        );\n        pi = 3.1415926535f;\n    \}\n\n    void process(int2 pos) \{\n\n        float2 dst_whitepoint = u_src_whitepoint + u_whitepoint_pre_offset;\n\n        // 1. calculate inset gamut\n        float3x3 inset_colorspace;\n        inset_colorspace = get_inset_colorspace(\n            u_src_primary_r,\n            u_src_primary_g,\n            u_src_primary_b,\n            dst_whitepoint,\n            u_inset_r,\n            u_inset_g,\n            u_inset_b\n        );\n\n        float2 primary_r_inset(inset_colorspace[0][0], inset_colorspace[0][1]);\n        float2 primary_g_inset(inset_colorspace[1][0], inset_colorspace[1][1]);\n        float2 primary_b_inset(inset_colorspace[2][0], inset_colorspace[2][1]);\n\n        primary_r_inset = rotate_point_around(\n            primary_r_inset, u_rotate_r * (pi/180), dst_whitepoint\n        );\n        primary_g_inset = rotate_point_around(\n            primary_g_inset, u_rotate_g * (pi/180), dst_whitepoint\n        );\n        primary_b_inset = rotate_point_around(\n            primary_b_inset, u_rotate_b * (pi/180), dst_whitepoint\n        );\n\n        float point_r_weight = 0.0;\n        float point_g_weight = 0.0;\n        float point_b_weight = 0.0;\n        float point_w_weight = 0.0;\n\n        float2 point_center(0,0);\n\n        // 2. start drawing in pixel space\n\n        // 2.1 draw src primaries\n        point_center = convert_CIExy_to_workspace(u_src_primary_r, pos);\n        point_r_weight = draw_point(point_center, u_point_scale * u_outline_scale * 0.5);\n\n        point_center = convert_CIExy_to_workspace(u_src_primary_g, pos);\n        point_g_weight = draw_point(point_center, u_point_scale * u_outline_scale * 0.5);\n\n        point_center = convert_CIExy_to_workspace(u_src_primary_b, pos);\n        point_b_weight = draw_point(point_center, u_point_scale * u_outline_scale * 0.5);\n\n        point_center = convert_CIExy_to_workspace(u_src_whitepoint, pos);\n        point_w_weight = draw_point(point_center, u_point_scale * u_outline_scale * 0.5);\n\n        // 2.2 draw inset primaries\n        point_center = convert_CIExy_to_workspace(primary_r_inset, pos);\n        point_r_weight += draw_torus(\n            point_center, u_point_scale, u_point_scale * u_outline_scale\n        );\n\n        point_center = convert_CIExy_to_workspace(primary_g_inset, pos);\n        point_g_weight += draw_torus(\n            point_center, u_point_scale, u_point_scale * u_outline_scale\n        );\n\n        point_center = convert_CIExy_to_workspace(primary_b_inset, pos);\n        point_b_weight += draw_torus(\n            point_center, u_point_scale, u_point_scale * u_outline_scale\n        );\n\n        point_center = convert_CIExy_to_workspace(\n            dst_whitepoint + u_whitepoint_post_offset, pos\n        );\n        point_w_weight += draw_torus(\n            point_center, u_point_scale, u_point_scale * u_outline_scale\n        );\n\n        point_r_weight = max(point_r_weight, point_w_weight);\n        point_g_weight = max(point_g_weight, point_w_weight);\n        point_b_weight = max(point_b_weight, point_w_weight);\n        float alpha = max(max(point_r_weight, point_g_weight), point_b_weight);\n\n        dst() = float4(point_r_weight, point_g_weight, point_b_weight, alpha);\n    \}\n\};"
+   rebuild ""
+   InsetPrimariesPlot_u_src_primary_r {
+      {{parent.primary_r.x}}
+      {{parent.primary_r.y}}
      }
-   addUserKnob {12 green_primary l "green_primary" +STARTLINE +NO_HANDLES}
-   green_primary {
+   InsetPrimariesPlot_u_src_primary_g {
        {{parent.primary_g.x}}
        {{parent.primary_g.y}}
      }
-   addUserKnob {12 blue_primary l "blue_primary" +STARTLINE +NO_HANDLES}
-   blue_primary {
+   InsetPrimariesPlot_u_src_primary_b {
        {{parent.primary_b.x}}
        {{parent.primary_b.y}}
      }
-   addUserKnob {26 "" +STARTLINE}
-   addUserKnob {12 whitepoint l "whitepoint" +STARTLINE +NO_HANDLES}
-   whitepoint {
+   InsetPrimariesPlot_u_src_whitepoint {
        {{parent.whitepoint.x}}
        {{parent.whitepoint.y}}
      }
-   addUserKnob {6 whitepoint_show l "show" -STARTLINE}
-   whitepoint_show {{parent.whitepoint_show}}
-   addUserKnob {26 "" +STARTLINE}
-   addUserKnob {7 point_size l "point_size" R 0 100}
-   point_size {{parent.point_size}}
-   addUserKnob {7 outline_width l "outline_width"}
-   outline_width 0.8
-   addUserKnob {20 About}
-   addUserKnob {26 toolName l name T GamutPlot}
-   addUserKnob {26 toolVersion l version T 0.1.1}
-   addUserKnob {26 toolAuthor l author T "<a style=\"color: rgb(200,200,200);\" href=\"https://mrlixm.github.io/\">Liam Collod</a>"}
-   addUserKnob {26 toolDescription l description T "Plot the gamut of a colorspace on the CIE xy coordinate system."}
-   addUserKnob {26 toolUrl l url T "<a style=\"color: rgb(200,200,200);\" href=\"https://github.com/MrLixm/Foundry_Nuke\">https://github.com/MrLixm/Foundry_Nuke</a>"}
-  }
-   Input {
-    inputs 0
-    name graph_area
-    xpos 0
-    ypos 0
-   }
-   Group {
-    name CIExyPoint_red
-    addUserKnob {20 User l CIExyPoint}
-    addUserKnob {12 ciexy l "CIE coordinates" +STARTLINE +NO_HANDLES}
-    ciexy {
-        {{parent.red_primary.x}}
-        {{parent.red_primary.y}}
-      }
-    addUserKnob {26 "" +STARTLINE}
-    addUserKnob {19 color l "color"}
-    color {1 0 0 1}
-    addUserKnob {14 size l "size" t "in pixels" R 0 100}
-    size {{parent.point_size}}
-    addUserKnob {7 outline_width l "outline_width" t "in ratio of the size"}
-    outline_width {{parent.outline_width}}
-    addUserKnob {20 About}
-    addUserKnob {26 toolName l name T CIExyPoint}
-    addUserKnob {26 toolVersion l version T 0.1.1}
-    addUserKnob {26 toolAuthor l author T "<a style=\"color: rgb(200,200,200);\" href=\"https://mrlixm.github.io/\">Liam Collod</a>"}
-    addUserKnob {26 toolDescription l description T "Plot a point in the CIE xy coordinate system."}
-    addUserKnob {26 toolUrl l url T "<a style=\"color: rgb(200,200,200);\" href=\"https://github.com/MrLixm/Foundry_Nuke\">https://github.com/MrLixm/Foundry_Nuke</a>"}
-   }
-    Input {
-     inputs 0
-     name graph_area
-     xpos 0
-     ypos 0
-    }
-    Radial {
-     name point
-     cliptype 0
-     area {
-         {{position.x-size.w/2}}
-         {{position.y-size.h/2}}
-         {{area.x+size.w}}
-         {{area.y+size.h}}
-       }
-     softness 0
-     color {{{parent.color}} {{parent.color}} {{parent.color}} {{parent.color}}}
-     addUserKnob {20 User l CIExyPoint}
-     addUserKnob {12 ciexy l "CIE coordinates" +STARTLINE +NO_HANDLES}
-     ciexy {
-         {{parent.ciexy.x}}
-         {{parent.ciexy.y}}
-       }
-     addUserKnob {12 position l "pixel center coordinates" +STARTLINE +NO_HANDLES}
-     position {
-         {{width*ciexy.x}}
-         {{height*ciexy.y}}
-       }
-     addUserKnob {14 size l "size" R 0 100}
-     size {
-         {{parent.size.w}}
-         {{parent.size.h}}
-       }
-    }
-    Radial {
-     name point_inner
-     disable {{parent.outline_width==0}}
-     cliptype 0
-     area {
-         {{position.x-size.w / 2}}
-         {{position.y-size.h / 2}}
-         {{area.x+size.w}}
-         {{area.y+size.h}}
-       }
-     softness 0
-     color {0 0 0 0}
-     addUserKnob {20 User l CIExyPoint}
-     addUserKnob {12 ciexy l "CIE coordinates" +STARTLINE +NO_HANDLES}
-     ciexy {
-         {{parent.ciexy.x}}
-         {{parent.ciexy.y}}
-       }
-     addUserKnob {12 position l "pixel center coordinates" +STARTLINE +NO_HANDLES}
-     position {
-         {{width*ciexy.x}}
-         {{height*ciexy.y}}
-       }
-     addUserKnob {14 size l "size" R 0 100}
-     size {{parent.size*outline_width}}
-     addUserKnob {7 outline_width l "outline_width"}
-     outline_width {{parent.outline_width}}
-    }
-    Output {
-     name Output1
-     xpos 0
-     ypos 100
-    }
-   end_group
-   Group {
-    name CIExyPoint_green
-    addUserKnob {20 User l CIExyPoint}
-    addUserKnob {12 ciexy l "CIE coordinates" +STARTLINE +NO_HANDLES}
-    ciexy {
-        {{parent.green_primary.x}}
-        {{parent.green_primary.y}}
-      }
-    addUserKnob {26 "" +STARTLINE}
-    addUserKnob {19 color l "color"}
-    color {0 1 0 1}
-    addUserKnob {14 size l "size" t "in pixels" R 0 100}
-    size {{parent.point_size}}
-    addUserKnob {7 outline_width l "outline_width" t "in ratio of the size"}
-    outline_width {{parent.outline_width}}
-    addUserKnob {20 About}
-    addUserKnob {26 toolName l name T CIExyPoint}
-    addUserKnob {26 toolVersion l version T 0.1.1}
-    addUserKnob {26 toolAuthor l author T "<a style=\"color: rgb(200,200,200);\" href=\"https://mrlixm.github.io/\">Liam Collod</a>"}
-    addUserKnob {26 toolDescription l description T "Plot a point in the CIE xy coordinate system."}
-    addUserKnob {26 toolUrl l url T "<a style=\"color: rgb(200,200,200);\" href=\"https://github.com/MrLixm/Foundry_Nuke\">https://github.com/MrLixm/Foundry_Nuke</a>"}
-   }
-    Input {
-     inputs 0
-     name graph_area
-     xpos 0
-     ypos 0
-    }
-    Radial {
-     name point
-     cliptype 0
-     area {
-         {{position.x-size.w/2}}
-         {{position.y-size.h/2}}
-         {{area.x+size.w}}
-         {{area.y+size.h}}
-       }
-     softness 0
-     color {{{parent.color}} {{parent.color}} {{parent.color}} {{parent.color}}}
-     addUserKnob {20 User l CIExyPoint}
-     addUserKnob {12 ciexy l "CIE coordinates" +STARTLINE +NO_HANDLES}
-     ciexy {
-         {{parent.ciexy.x}}
-         {{parent.ciexy.y}}
-       }
-     addUserKnob {12 position l "pixel center coordinates" +STARTLINE +NO_HANDLES}
-     position {
-         {{width*ciexy.x}}
-         {{height*ciexy.y}}
-       }
-     addUserKnob {14 size l "size" R 0 100}
-     size {
-         {{parent.size.w}}
-         {{parent.size.h}}
-       }
-    }
-    Radial {
-     name point_inner
-     disable {{parent.outline_width==0}}
-     cliptype 0
-     area {
-         {{position.x-size.w / 2}}
-         {{position.y-size.h / 2}}
-         {{area.x+size.w}}
-         {{area.y+size.h}}
-       }
-     softness 0
-     color {0 0 0 0}
-     addUserKnob {20 User l CIExyPoint}
-     addUserKnob {12 ciexy l "CIE coordinates" +STARTLINE +NO_HANDLES}
-     ciexy {
-         {{parent.ciexy.x}}
-         {{parent.ciexy.y}}
-       }
-     addUserKnob {12 position l "pixel center coordinates" +STARTLINE +NO_HANDLES}
-     position {
-         {{width*ciexy.x}}
-         {{height*ciexy.y}}
-       }
-     addUserKnob {14 size l "size" R 0 100}
-     size {{parent.size*outline_width}}
-     addUserKnob {7 outline_width l "outline_width"}
-     outline_width {{parent.outline_width}}
-    }
-    Output {
-     name Output1
-     xpos 0
-     ypos 100
-    }
-   end_group
-   Group {
-    name CIExyPoint_blue
-    addUserKnob {20 User l CIExyPoint}
-    addUserKnob {12 ciexy l "CIE coordinates" +STARTLINE +NO_HANDLES}
-    ciexy {
-        {{parent.blue_primary.x}}
-        {{parent.blue_primary.y}}
-      }
-    addUserKnob {26 "" +STARTLINE}
-    addUserKnob {19 color l "color"}
-    color {0 0 1 1}
-    addUserKnob {14 size l "size" t "in pixels" R 0 100}
-    size {{parent.point_size}}
-    addUserKnob {7 outline_width l "outline_width" t "in ratio of the size"}
-    outline_width {{parent.outline_width}}
-    addUserKnob {20 About}
-    addUserKnob {26 toolName l name T CIExyPoint}
-    addUserKnob {26 toolVersion l version T 0.1.1}
-    addUserKnob {26 toolAuthor l author T "<a style=\"color: rgb(200,200,200);\" href=\"https://mrlixm.github.io/\">Liam Collod</a>"}
-    addUserKnob {26 toolDescription l description T "Plot a point in the CIE xy coordinate system."}
-    addUserKnob {26 toolUrl l url T "<a style=\"color: rgb(200,200,200);\" href=\"https://github.com/MrLixm/Foundry_Nuke\">https://github.com/MrLixm/Foundry_Nuke</a>"}
-   }
-    Input {
-     inputs 0
-     name graph_area
-     xpos 0
-     ypos 0
-    }
-    Radial {
-     name point
-     cliptype 0
-     area {
-         {{position.x-size.w/2}}
-         {{position.y-size.h/2}}
-         {{area.x+size.w}}
-         {{area.y+size.h}}
-       }
-     softness 0
-     color {{{parent.color}} {{parent.color}} {{parent.color}} {{parent.color}}}
-     addUserKnob {20 User l CIExyPoint}
-     addUserKnob {12 ciexy l "CIE coordinates" +STARTLINE +NO_HANDLES}
-     ciexy {
-         {{parent.ciexy.x}}
-         {{parent.ciexy.y}}
-       }
-     addUserKnob {12 position l "pixel center coordinates" +STARTLINE +NO_HANDLES}
-     position {
-         {{width*ciexy.x}}
-         {{height*ciexy.y}}
-       }
-     addUserKnob {14 size l "size" R 0 100}
-     size {
-         {{parent.size.w}}
-         {{parent.size.h}}
-       }
-    }
-    Radial {
-     name point_inner
-     disable {{parent.outline_width==0}}
-     cliptype 0
-     area {
-         {{position.x-size.w / 2}}
-         {{position.y-size.h / 2}}
-         {{area.x+size.w}}
-         {{area.y+size.h}}
-       }
-     softness 0
-     color {0 0 0 0}
-     addUserKnob {20 User l CIExyPoint}
-     addUserKnob {12 ciexy l "CIE coordinates" +STARTLINE +NO_HANDLES}
-     ciexy {
-         {{parent.ciexy.x}}
-         {{parent.ciexy.y}}
-       }
-     addUserKnob {12 position l "pixel center coordinates" +STARTLINE +NO_HANDLES}
-     position {
-         {{width*ciexy.x}}
-         {{height*ciexy.y}}
-       }
-     addUserKnob {14 size l "size" R 0 100}
-     size {{parent.size*outline_width}}
-     addUserKnob {7 outline_width l "outline_width"}
-     outline_width {{parent.outline_width}}
-    }
-    Output {
-     name Output1
-     xpos 0
-     ypos 100
-    }
-   end_group
-   Dot {
-    name Dot1
-   }
-   set N23344020 [stack 0]
-    Group {
-     name CIExyPoint_whitepoint
-     xpos 50
-     ypos 130
-     addUserKnob {20 User l CIExyPoint}
-     addUserKnob {12 ciexy l "CIE coordinates" +STARTLINE +NO_HANDLES}
-     ciexy {
-         {{parent.whitepoint.x}}
-         {{parent.whitepoint.y}}
-       }
-     addUserKnob {26 "" +STARTLINE}
-     addUserKnob {19 color l "color"}
-     color {1 1 1 1}
-     addUserKnob {14 size l "size" t "in pixels" R 0 100}
-     size {{parent.point_size}}
-     addUserKnob {7 outline_width l "outline_width" t "in ratio of the size"}
-     outline_width {{parent.outline_width}}
-     addUserKnob {20 About}
-     addUserKnob {26 toolName l name T CIExyPoint}
-     addUserKnob {26 toolVersion l version T 0.1.1}
-     addUserKnob {26 toolAuthor l author T "<a style=\"color: rgb(200,200,200);\" href=\"https://mrlixm.github.io/\">Liam Collod</a>"}
-     addUserKnob {26 toolDescription l description T "Plot a point in the CIE xy coordinate system."}
-     addUserKnob {26 toolUrl l url T "<a style=\"color: rgb(200,200,200);\" href=\"https://github.com/MrLixm/Foundry_Nuke\">https://github.com/MrLixm/Foundry_Nuke</a>"}
-    }
-     Input {
-      inputs 0
-      name graph_area
-      xpos 0
-      ypos 0
+   InsetPrimariesPlot_u_inset_r {{parent.inset_r}}
+   InsetPrimariesPlot_u_inset_g {{parent.inset_g}}
+   InsetPrimariesPlot_u_inset_b {{parent.inset_b}}
+   InsetPrimariesPlot_u_rotate_r {{parent.rotate_r}}
+   InsetPrimariesPlot_u_rotate_g {{parent.rotate_g}}
+   InsetPrimariesPlot_u_rotate_b {{parent.rotate_b}}
+   InsetPrimariesPlot_u_whitepoint_pre_offset {
+       {{parent.whitepoint_pre_offset_x}}
+       {{parent.whitepoint_pre_offset_y}}
      }
-     Radial {
-      name point
-      cliptype 0
-      area {
-          {{position.x-size.w/2}}
-          {{position.y-size.h/2}}
-          {{area.x+size.w}}
-          {{area.y+size.h}}
-        }
-      softness 0
-      color {{{parent.color}} {{parent.color}} {{parent.color}} {{parent.color}}}
-      addUserKnob {20 User l CIExyPoint}
-      addUserKnob {12 ciexy l "CIE coordinates" +STARTLINE +NO_HANDLES}
-      ciexy {
-          {{parent.ciexy.x}}
-          {{parent.ciexy.y}}
-        }
-      addUserKnob {12 position l "pixel center coordinates" +STARTLINE +NO_HANDLES}
-      position {
-          {{width*ciexy.x}}
-          {{height*ciexy.y}}
-        }
-      addUserKnob {14 size l "size" R 0 100}
-      size {
-          {{parent.size.w}}
-          {{parent.size.h}}
-        }
+   InsetPrimariesPlot_u_whitepoint_post_offset {
+       {{parent.whitepoint_post_offset_x}}
+       {{parent.whitepoint_post_offset_y}}
      }
-     Radial {
-      name point_inner
-      disable {{parent.outline_width==0}}
-      cliptype 0
-      area {
-          {{position.x-size.w / 2}}
-          {{position.y-size.h / 2}}
-          {{area.x+size.w}}
-          {{area.y+size.h}}
-        }
-      softness 0
-      color {0 0 0 0}
-      addUserKnob {20 User l CIExyPoint}
-      addUserKnob {12 ciexy l "CIE coordinates" +STARTLINE +NO_HANDLES}
-      ciexy {
-          {{parent.ciexy.x}}
-          {{parent.ciexy.y}}
-        }
-      addUserKnob {12 position l "pixel center coordinates" +STARTLINE +NO_HANDLES}
-      position {
-          {{width*ciexy.x}}
-          {{height*ciexy.y}}
-        }
-      addUserKnob {14 size l "size" R 0 100}
-      size {{parent.size*outline_width}}
-      addUserKnob {7 outline_width l "outline_width"}
-      outline_width {{parent.outline_width}}
-     }
-     Output {
-      name Output1
-      xpos 0
-      ypos 100
-     }
-    end_group
-   push $N23344020
-   Switch {
-    inputs 2
-    which {{parent.whitepoint_show}}
-    name SwitchPlot
-    xpos 0
-    ypos 200
-   }
-   Output {
-    name Output1
-    xpos 0
-    ypos 250
-   }
-  end_group
-  Group {
-   name gamut_inset
-   xpos 100
-   ypos 150
-   addUserKnob {20 User l GamutInset}
-   addUserKnob {12 whitepoint_src l "whitepoint_src" +STARTLINE +NO_HANDLES}
-   whitepoint_src {
-       {{gamut_define.whitepoint.x}}
-       {{gamut_define.whitepoint.y}}
-     }
-   addUserKnob {12 primary_src_r l "primary_src_r" +STARTLINE +NO_HANDLES}
-   primary_src_r {
-       {{gamut_define.red_primary.x}}
-       {{gamut_define.red_primary.y}}
-     }
-   addUserKnob {12 primary_src_g l "primary_src_g" +STARTLINE +NO_HANDLES}
-   primary_src_g {
-       {{gamut_define.green_primary.x}}
-       {{gamut_define.green_primary.y}}
-     }
-   addUserKnob {12 primary_src_b l "primary_src_b" +STARTLINE +NO_HANDLES}
-   primary_src_b {
-       {{gamut_define.blue_primary.x}}
-       {{gamut_define.blue_primary.y}}
-     }
-   addUserKnob {26 "" +STARTLINE}
-   addUserKnob {12 primary_inset_u_r l "primary_inset_u_r" +STARTLINE +NO_HANDLES}
-   primary_inset_u_r {
-       {{lerp(primary_src_r.x,whitepoint_edited.x,inset)}}
-       {{lerp(primary_src_r.y,whitepoint_edited.y,inset)}}
-     }
-   addUserKnob {12 primary_inset_u_g l "primary_inset_u_g" +STARTLINE +NO_HANDLES}
-   primary_inset_u_g {
-       {{lerp(primary_src_g.x,whitepoint_edited.x,inset)}}
-       {{lerp(primary_src_g.y,whitepoint_edited.y,inset)}}
-     }
-   addUserKnob {12 primary_inset_u_b l "primary_inset_u_b" +STARTLINE +NO_HANDLES}
-   primary_inset_u_b {
-       {{lerp(primary_src_b.x,whitepoint_edited.x,inset)}}
-       {{lerp(primary_src_b.y,whitepoint_edited.y,inset)}}
-     }
-   addUserKnob {26 "" +STARTLINE}
-   addUserKnob {12 whitepoint_edited l "whitepoint_edited" +STARTLINE +NO_HANDLES}
-   whitepoint_edited {
-       {{whitepoint_src.x+whitepoint_offset_x}}
-       {{whitepoint_src.y+whitepoint_offset_y}}
-     }
-   addUserKnob {12 red_primary l "red_primary" +STARTLINE +NO_HANDLES}
-   red_primary {
-       {{lerp(primary_inset_u_r.x,whitepoint_edited.x,inset_r)}}
-       {{lerp(primary_inset_u_r.y,whitepoint_edited.y,inset_r)}}
-     }
-   addUserKnob {12 green_primary l "green_primary" +STARTLINE +NO_HANDLES}
-   green_primary {
-       {{lerp(primary_inset_u_g.x,whitepoint_edited.x,inset_g)}}
-       {{lerp(primary_inset_u_g.y,whitepoint_edited.y,inset_g)}}
-     }
-   addUserKnob {12 blue_primary l "blue_primary" +STARTLINE +NO_HANDLES}
-   blue_primary {
-       {{lerp(primary_inset_u_b.x,whitepoint_edited.x,inset_b)}}
-       {{lerp(primary_inset_u_b.y,whitepoint_edited.y,inset_b)}}
-     }
-   addUserKnob {26 "" +STARTLINE}
-   addUserKnob {6 whitepoint_show l "show whitepoint" +STARTLINE}
-   whitepoint_show true
-   addUserKnob {7 point_size l "point_size" R 0 100}
-   point_size {{gamut_define.point_size*0.4}}
-   addUserKnob {7 outline_width l "outline_width"}
-   outline_width 0
-   addUserKnob {26 "" +STARTLINE}
-   addUserKnob {7 inset l "inset"}
-   inset {{parent.inset}}
-   addUserKnob {7 inset_r l "inset_r" t "inset towards whitepoint"}
-   inset_r {{parent.inset_r}}
-   addUserKnob {7 inset_g l "inset_g" t "inset towards whitepoint"}
-   inset_g {{parent.inset_g}}
-   addUserKnob {7 inset_b l "inset_b" t "inset towards whitepoint"}
-   inset_b {{parent.inset_b}}
-   addUserKnob {7 whitepoint_offset_x l "whitepoint_offset_x" R -0.5 0.5}
-   whitepoint_offset_x {{parent.whitepoint_offset_x}}
-   addUserKnob {7 whitepoint_offset_y l "whitepoint_offset_y" R -0.5 0.5}
-   whitepoint_offset_y {{parent.whitepoint_offset_y}}
-   addUserKnob {20 About}
-   addUserKnob {26 toolName l name T GamutInset}
-   addUserKnob {26 toolVersion l version T 0.2.1}
-   addUserKnob {26 toolAuthor l author T "<a style=\"color: rgb(200,200,200);\" href=\"https://mrlixm.github.io/\">Liam Collod</a>"}
-   addUserKnob {26 toolDescription l description T "Reshape and plot the gamut of a colorspace on the CIE xy coordinate system."}
-   addUserKnob {26 toolUrl l url T "<a style=\"color: rgb(200,200,200);\" href=\"https://github.com/MrLixm/Foundry_Nuke\">https://github.com/MrLixm/Foundry_Nuke</a>"}
-  }
-   Input {
-    inputs 0
-    name graph_area
-    xpos 0
-    ypos 0
-   }
-   Group {
-    name CIExyPoint_red
-    addUserKnob {20 User l CIExyPoint}
-    addUserKnob {12 ciexy l "CIE coordinates" +STARTLINE +NO_HANDLES}
-    ciexy {
-        {{parent.red_primary.x}}
-        {{parent.red_primary.y}}
-      }
-    addUserKnob {26 "" +STARTLINE}
-    addUserKnob {19 color l "color"}
-    color {1 0 0 1}
-    addUserKnob {14 size l "size" t "in pixels" R 0 100}
-    size {{parent.point_size}}
-    addUserKnob {7 outline_width l "outline_width" t "in ratio of the size"}
-    outline_width {{parent.outline_width}}
-    addUserKnob {20 About}
-    addUserKnob {26 toolName l name T CIExyPoint}
-    addUserKnob {26 toolVersion l version T 0.1.1}
-    addUserKnob {26 toolAuthor l author T "<a style=\"color: rgb(200,200,200);\" href=\"https://mrlixm.github.io/\">Liam Collod</a>"}
-    addUserKnob {26 toolDescription l description T "Plot a point in the CIE xy coordinate system."}
-    addUserKnob {26 toolUrl l url T "<a style=\"color: rgb(200,200,200);\" href=\"https://github.com/MrLixm/Foundry_Nuke\">https://github.com/MrLixm/Foundry_Nuke</a>"}
-   }
-    Input {
-     inputs 0
-     name graph_area
-     xpos 0
-     ypos 0
-    }
-    Radial {
-     name point
-     cliptype 0
-     area {
-         {{position.x-size.w/2}}
-         {{position.y-size.h/2}}
-         {{area.x+size.w}}
-         {{area.y+size.h}}
-       }
-     softness 0
-     color {{{parent.color}} {{parent.color}} {{parent.color}} {{parent.color}}}
-     addUserKnob {20 User l CIExyPoint}
-     addUserKnob {12 ciexy l "CIE coordinates" +STARTLINE +NO_HANDLES}
-     ciexy {
-         {{parent.ciexy.x}}
-         {{parent.ciexy.y}}
-       }
-     addUserKnob {12 position l "pixel center coordinates" +STARTLINE +NO_HANDLES}
-     position {
-         {{width*ciexy.x}}
-         {{height*ciexy.y}}
-       }
-     addUserKnob {14 size l "size" R 0 100}
-     size {
-         {{parent.size.w}}
-         {{parent.size.h}}
-       }
-    }
-    Radial {
-     name point_inner
-     disable {{parent.outline_width==0}}
-     cliptype 0
-     area {
-         {{position.x-size.w / 2}}
-         {{position.y-size.h / 2}}
-         {{area.x+size.w}}
-         {{area.y+size.h}}
-       }
-     softness 0
-     color {0 0 0 0}
-     addUserKnob {20 User l CIExyPoint}
-     addUserKnob {12 ciexy l "CIE coordinates" +STARTLINE +NO_HANDLES}
-     ciexy {
-         {{parent.ciexy.x}}
-         {{parent.ciexy.y}}
-       }
-     addUserKnob {12 position l "pixel center coordinates" +STARTLINE +NO_HANDLES}
-     position {
-         {{width*ciexy.x}}
-         {{height*ciexy.y}}
-       }
-     addUserKnob {14 size l "size" R 0 100}
-     size {{parent.size*outline_width}}
-     addUserKnob {7 outline_width l "outline_width"}
-     outline_width {{parent.outline_width}}
-    }
-    Output {
-     name Output1
-     xpos 0
-     ypos 100
-    }
-   end_group
-   Group {
-    name CIExyPoint_green
-    addUserKnob {20 User l CIExyPoint}
-    addUserKnob {12 ciexy l "CIE coordinates" +STARTLINE +NO_HANDLES}
-    ciexy {
-        {{parent.green_primary.x}}
-        {{parent.green_primary.y}}
-      }
-    addUserKnob {26 "" +STARTLINE}
-    addUserKnob {19 color l "color"}
-    color {0 1 0 1}
-    addUserKnob {14 size l "size" t "in pixels" R 0 100}
-    size {{parent.point_size}}
-    addUserKnob {7 outline_width l "outline_width" t "in ratio of the size"}
-    outline_width {{parent.outline_width}}
-    addUserKnob {20 About}
-    addUserKnob {26 toolName l name T CIExyPoint}
-    addUserKnob {26 toolVersion l version T 0.1.1}
-    addUserKnob {26 toolAuthor l author T "<a style=\"color: rgb(200,200,200);\" href=\"https://mrlixm.github.io/\">Liam Collod</a>"}
-    addUserKnob {26 toolDescription l description T "Plot a point in the CIE xy coordinate system."}
-    addUserKnob {26 toolUrl l url T "<a style=\"color: rgb(200,200,200);\" href=\"https://github.com/MrLixm/Foundry_Nuke\">https://github.com/MrLixm/Foundry_Nuke</a>"}
-   }
-    Input {
-     inputs 0
-     name graph_area
-     xpos 0
-     ypos 0
-    }
-    Radial {
-     name point
-     cliptype 0
-     area {
-         {{position.x-size.w/2}}
-         {{position.y-size.h/2}}
-         {{area.x+size.w}}
-         {{area.y+size.h}}
-       }
-     softness 0
-     color {{{parent.color}} {{parent.color}} {{parent.color}} {{parent.color}}}
-     addUserKnob {20 User l CIExyPoint}
-     addUserKnob {12 ciexy l "CIE coordinates" +STARTLINE +NO_HANDLES}
-     ciexy {
-         {{parent.ciexy.x}}
-         {{parent.ciexy.y}}
-       }
-     addUserKnob {12 position l "pixel center coordinates" +STARTLINE +NO_HANDLES}
-     position {
-         {{width*ciexy.x}}
-         {{height*ciexy.y}}
-       }
-     addUserKnob {14 size l "size" R 0 100}
-     size {
-         {{parent.size.w}}
-         {{parent.size.h}}
-       }
-    }
-    Radial {
-     name point_inner
-     disable {{parent.outline_width==0}}
-     cliptype 0
-     area {
-         {{position.x-size.w / 2}}
-         {{position.y-size.h / 2}}
-         {{area.x+size.w}}
-         {{area.y+size.h}}
-       }
-     softness 0
-     color {0 0 0 0}
-     addUserKnob {20 User l CIExyPoint}
-     addUserKnob {12 ciexy l "CIE coordinates" +STARTLINE +NO_HANDLES}
-     ciexy {
-         {{parent.ciexy.x}}
-         {{parent.ciexy.y}}
-       }
-     addUserKnob {12 position l "pixel center coordinates" +STARTLINE +NO_HANDLES}
-     position {
-         {{width*ciexy.x}}
-         {{height*ciexy.y}}
-       }
-     addUserKnob {14 size l "size" R 0 100}
-     size {{parent.size*outline_width}}
-     addUserKnob {7 outline_width l "outline_width"}
-     outline_width {{parent.outline_width}}
-    }
-    Output {
-     name Output1
-     xpos 0
-     ypos 100
-    }
-   end_group
-   Group {
-    name CIExyPoint_blue
-    addUserKnob {20 User l CIExyPoint}
-    addUserKnob {12 ciexy l "CIE coordinates" +STARTLINE +NO_HANDLES}
-    ciexy {
-        {{parent.blue_primary.x}}
-        {{parent.blue_primary.y}}
-      }
-    addUserKnob {26 "" +STARTLINE}
-    addUserKnob {19 color l "color"}
-    color {0 0 1 1}
-    addUserKnob {14 size l "size" t "in pixels" R 0 100}
-    size {{parent.point_size}}
-    addUserKnob {7 outline_width l "outline_width" t "in ratio of the size"}
-    outline_width {{parent.outline_width}}
-    addUserKnob {20 About}
-    addUserKnob {26 toolName l name T CIExyPoint}
-    addUserKnob {26 toolVersion l version T 0.1.1}
-    addUserKnob {26 toolAuthor l author T "<a style=\"color: rgb(200,200,200);\" href=\"https://mrlixm.github.io/\">Liam Collod</a>"}
-    addUserKnob {26 toolDescription l description T "Plot a point in the CIE xy coordinate system."}
-    addUserKnob {26 toolUrl l url T "<a style=\"color: rgb(200,200,200);\" href=\"https://github.com/MrLixm/Foundry_Nuke\">https://github.com/MrLixm/Foundry_Nuke</a>"}
-   }
-    Input {
-     inputs 0
-     name graph_area
-     xpos 0
-     ypos 0
-    }
-    Radial {
-     name point
-     cliptype 0
-     area {
-         {{position.x-size.w/2}}
-         {{position.y-size.h/2}}
-         {{area.x+size.w}}
-         {{area.y+size.h}}
-       }
-     softness 0
-     color {{{parent.color}} {{parent.color}} {{parent.color}} {{parent.color}}}
-     addUserKnob {20 User l CIExyPoint}
-     addUserKnob {12 ciexy l "CIE coordinates" +STARTLINE +NO_HANDLES}
-     ciexy {
-         {{parent.ciexy.x}}
-         {{parent.ciexy.y}}
-       }
-     addUserKnob {12 position l "pixel center coordinates" +STARTLINE +NO_HANDLES}
-     position {
-         {{width*ciexy.x}}
-         {{height*ciexy.y}}
-       }
-     addUserKnob {14 size l "size" R 0 100}
-     size {
-         {{parent.size.w}}
-         {{parent.size.h}}
-       }
-    }
-    Radial {
-     name point_inner
-     disable {{parent.outline_width==0}}
-     cliptype 0
-     area {
-         {{position.x-size.w / 2}}
-         {{position.y-size.h / 2}}
-         {{area.x+size.w}}
-         {{area.y+size.h}}
-       }
-     softness 0
-     color {0 0 0 0}
-     addUserKnob {20 User l CIExyPoint}
-     addUserKnob {12 ciexy l "CIE coordinates" +STARTLINE +NO_HANDLES}
-     ciexy {
-         {{parent.ciexy.x}}
-         {{parent.ciexy.y}}
-       }
-     addUserKnob {12 position l "pixel center coordinates" +STARTLINE +NO_HANDLES}
-     position {
-         {{width*ciexy.x}}
-         {{height*ciexy.y}}
-       }
-     addUserKnob {14 size l "size" R 0 100}
-     size {{parent.size*outline_width}}
-     addUserKnob {7 outline_width l "outline_width"}
-     outline_width {{parent.outline_width}}
-    }
-    Output {
-     name Output1
-     xpos 0
-     ypos 100
-    }
-   end_group
-   Dot {
-    name Dot1
-   }
-   set N23344020 [stack 0]
-    Group {
-     name CIExyPoint_whitepoint
-     xpos 50
-     ypos 130
-     addUserKnob {20 User l CIExyPoint}
-     addUserKnob {12 ciexy l "CIE coordinates" +STARTLINE +NO_HANDLES}
-     ciexy {
-         {{parent.whitepoint_edited.x}}
-         {{parent.whitepoint_edited.y}}
-       }
-     addUserKnob {26 "" +STARTLINE}
-     addUserKnob {19 color l "color"}
-     color {1 1 1 1}
-     addUserKnob {14 size l "size" t "in pixels" R 0 100}
-     size {{parent.point_size}}
-     addUserKnob {7 outline_width l "outline_width" t "in ratio of the size"}
-     outline_width {{parent.outline_width}}
-     addUserKnob {20 About}
-     addUserKnob {26 toolName l name T CIExyPoint}
-     addUserKnob {26 toolVersion l version T 0.1.1}
-     addUserKnob {26 toolAuthor l author T "<a style=\"color: rgb(200,200,200);\" href=\"https://mrlixm.github.io/\">Liam Collod</a>"}
-     addUserKnob {26 toolDescription l description T "Plot a point in the CIE xy coordinate system."}
-     addUserKnob {26 toolUrl l url T "<a style=\"color: rgb(200,200,200);\" href=\"https://github.com/MrLixm/Foundry_Nuke\">https://github.com/MrLixm/Foundry_Nuke</a>"}
-    }
-     Input {
-      inputs 0
-      name graph_area
-      xpos 0
-      ypos 0
-     }
-     Radial {
-      name point
-      cliptype 0
-      area {
-          {{position.x-size.w/2}}
-          {{position.y-size.h/2}}
-          {{area.x+size.w}}
-          {{area.y+size.h}}
-        }
-      softness 0
-      color {{{parent.color}} {{parent.color}} {{parent.color}} {{parent.color}}}
-      addUserKnob {20 User l CIExyPoint}
-      addUserKnob {12 ciexy l "CIE coordinates" +STARTLINE +NO_HANDLES}
-      ciexy {
-          {{parent.ciexy.x}}
-          {{parent.ciexy.y}}
-        }
-      addUserKnob {12 position l "pixel center coordinates" +STARTLINE +NO_HANDLES}
-      position {
-          {{width*ciexy.x}}
-          {{height*ciexy.y}}
-        }
-      addUserKnob {14 size l "size" R 0 100}
-      size {
-          {{parent.size.w}}
-          {{parent.size.h}}
-        }
-     }
-     Radial {
-      name point_inner
-      disable {{parent.outline_width==0}}
-      cliptype 0
-      area {
-          {{position.x-size.w / 2}}
-          {{position.y-size.h / 2}}
-          {{area.x+size.w}}
-          {{area.y+size.h}}
-        }
-      softness 0
-      color {0 0 0 0}
-      addUserKnob {20 User l CIExyPoint}
-      addUserKnob {12 ciexy l "CIE coordinates" +STARTLINE +NO_HANDLES}
-      ciexy {
-          {{parent.ciexy.x}}
-          {{parent.ciexy.y}}
-        }
-      addUserKnob {12 position l "pixel center coordinates" +STARTLINE +NO_HANDLES}
-      position {
-          {{width*ciexy.x}}
-          {{height*ciexy.y}}
-        }
-      addUserKnob {14 size l "size" R 0 100}
-      size {{parent.size*outline_width}}
-      addUserKnob {7 outline_width l "outline_width"}
-      outline_width {{parent.outline_width}}
-     }
-     Output {
-      name Output1
-      xpos 0
-      ypos 100
-     }
-    end_group
-   push $N23344020
-   Switch {
-    inputs 2
-    which {{parent.whitepoint_show}}
-    name SwitchWhitepoint
-    xpos 0
-    ypos 200
-   }
-   Output {
-    name Output1
-    xpos 0
-    ypos 250
-   }
-  end_group
-  Reformat {
-   type scale
-   scale 1.4
-   resize none
-   name ReformatViewOutside
-   xpos 100
-   ypos 250
+   InsetPrimariesPlot_u_invert {{parent.invert_inset}}
+   InsetPrimariesPlot_u_point_scale {{parent.point_size}}
+   InsetPrimariesPlot_u_outline_scale {{parent.point_outline_scale}}
+   InsetPrimariesPlot_u_margins {{parent.plot_margins}}
+   format "2048 2048 0 0 2048 2048 1 square_2K"
+   rebuild_finalise ""
+   name InsetPlotBlink
+   xpos 200
+   ypos 200
   }
  push $N1aabb660
-  ColorMatrix {
-   name MatrixInset
-   xpos 0
-   ypos 300
-   matrix {
-       {1 0 0}
-       {0 1 0}
-       {0 0 1}
+  BlinkScript {
+   inputs 1
+   recompileCount 1
+   KernelDescription "2 \"InsetPrimaries\" iterate pixelWise 22158edb4a38696d029dc1be2d704f819d976c99164e005b5773f925cbc54f2f 2 \"src\" Read Point \"dst\" Write Point 13 \"u_invert\" Bool 1 AA== \"u_src_primary_r\" Float 2 AAAAAAAAAAA= \"u_src_primary_g\" Float 2 AAAAAAAAAAA= \"u_src_primary_b\" Float 2 AAAAAAAAAAA= \"u_src_whitepoint\" Float 2 AAAAAAAAAAA= \"u_inset_r\" Float 1 AAAAAA== \"u_inset_g\" Float 1 AAAAAA== \"u_inset_b\" Float 1 AAAAAA== \"u_rotate_r\" Float 1 AAAAAA== \"u_rotate_g\" Float 1 AAAAAA== \"u_rotate_b\" Float 1 AAAAAA== \"u_whitepoint_pre_offset\" Float 2 AAAAAAAAAAA= \"u_whitepoint_post_offset\" Float 2 AAAAAAAAAAA= 13 \"u_invert\" 1 1 \"u_src_primary_r\" 2 1 \"u_src_primary_g\" 2 1 \"u_src_primary_b\" 2 1 \"u_src_whitepoint\" 2 1 \"u_inset_r\" 1 1 \"u_inset_g\" 1 1 \"u_inset_b\" 1 1 \"u_rotate_r\" 1 1 \"u_rotate_g\" 1 1 \"u_rotate_b\" 1 1 \"u_whitepoint_pre_offset\" 2 1 \"u_whitepoint_post_offset\" 2 1 1 \"pi\" Float 1 1 AAAAAA=="
+   kernelSource "// version 6\nkernel InsetPrimaries : ImageComputationKernel<ePixelWise>\n\{\n    Image<eRead, eAccessPoint, eEdgeClamped> src;\n    Image<eWrite> dst;\n\n    param:\n        bool u_invert;\n        float2 u_src_primary_r;\n        float2 u_src_primary_g;\n        float2 u_src_primary_b;\n        float2 u_src_whitepoint;\n        float u_inset_r;\n        float u_inset_g;\n        float u_inset_b;\n        float u_rotate_r;\n        float u_rotate_g;\n        float u_rotate_b;\n        float2 u_whitepoint_pre_offset;\n        float2 u_whitepoint_post_offset;\n\n    local:\n        float pi;\n\n    float lerp(float a1, float a2, float amount)\{\n        // linear interpolation between 2 values\n        return (1.0 - amount) * a1 + amount * a2;\n    \}\n\n    float2 rotate_point_around(float2 point, float angle, float2 center)\{\n        // angle: in radians\n        // https://stackoverflow.com/a/2259502/13806195\n\n        float s = sin(angle);\n        float c = cos(angle);\n\n        // translate point back to origin:\n        point.x -= center.x;\n        point.y -= center.y;\n\n        // rotate point\n        float xnew = point.x * c - point.y * s;\n        float ynew = point.x * s + point.y * c;\n\n        // translate point back:\n        point.x = xnew + center.x;\n        point.y = ynew + center.y;\n        return point;\n    \}\n\n    float3 mult_f3_by_f3x3(float3 vector, float3x3 matrix) \{\n        return float3(\n            matrix[0][0] * vector.x + matrix[0][1] * vector.y + matrix[0][2] * vector.z,\n            matrix[1][0] * vector.x + matrix[1][1] * vector.y + matrix[1][2] * vector.z,\n            matrix[2][0] * vector.x + matrix[2][1] * vector.y + matrix[2][2] * vector.z\n        );\n    \}\n\n    float3x3 normalised_primary_matrix(\n        float2 primary_r,\n        float2 primary_g,\n        float2 primary_b,\n        float2 whitepoint\n    ) \{\n        // Calculate the normalized primaries matrix for the specified chromaticities and whitepoint.\n        // Derived from:\n        //   SMPTE Recommended Practice - Derivation of Basic Television Color Equations\n        //   https://ieeexplore.ieee.org/document/7291155\n\n        float3x3 matrix;\n        // build a 3x3 matrix from the primaries and add a third z axis\n        matrix[0][0] = primary_r[0];\n        matrix[0][1] = primary_r[1];\n        matrix[0][2] = 1.0 - primary_r[0] - primary_r[1];\n        matrix[1][0] = primary_g[0];\n        matrix[1][1] = primary_g[1];\n        matrix[1][2] = 1.0 - primary_g[0] - primary_g[1];\n        matrix[2][0] = primary_b[0];\n        matrix[2][1] = primary_b[1];\n        matrix[2][2] = 1.0 - primary_b[0] - primary_b[1];\n\n        float Wz;\n        Wz = 1.0 - whitepoint[0] - whitepoint[1];\n        float3 W(whitepoint[0] / whitepoint[1], 1.0, Wz /  whitepoint[1]);\n\n        float3x3 P(matrix);\n        P = P.transpose();\n\n        float3 C;\n        C = mult_f3_by_f3x3(W,P.invert());\n\n        float3x3 Cm(0,0,0,0,0,0,0,0,0);\n        Cm[0][0] = C.x;\n        Cm[1][1] = C.y;\n        Cm[2][2] = C.z;\n\n        float3x3 npm;\n        npm = P * Cm;\n        return npm;\n    \}\n\n    bool are_chromaticities_identity(\n        float2 primary_r,\n        float2 primary_g,\n        float2 primary_b\n    ) \{\n        return (\n            primary_r.x == 1.0 && primary_r.y == 0.0 &&\n            primary_g.x == 0.0 && primary_g.y == 1.0 &&\n            primary_b.x == 0.0 && primary_b.y == 0.0\n        );\n    \}\n\n    float3x3 get_inset_colorspace(\n        float2 primary_r,\n        float2 primary_g,\n        float2 primary_b,\n        float2 whitepoint,\n        float inset_r,\n        float inset_g,\n        float inset_b\n    )\{\n        float2 new_primary_r;\n        float2 new_primary_g;\n        float2 new_primary_b;\n\n        new_primary_r.x = lerp(primary_r.x, whitepoint.x, inset_r);\n        new_primary_r.y = lerp(primary_r.y, whitepoint.y, inset_r);\n        new_primary_g.x = lerp(primary_g.x, whitepoint.x, inset_g);\n        new_primary_g.y = lerp(primary_g.y, whitepoint.y, inset_g);\n        new_primary_b.x = lerp(primary_b.x, whitepoint.x, inset_b);\n        new_primary_b.y = lerp(primary_b.y, whitepoint.y, inset_b);\n\n        float3x3 out;\n        out[0][0] = new_primary_r.x;\n        out[0][1] = new_primary_r.y;\n        out[1][0] = new_primary_g.x;\n        out[1][1] = new_primary_g.y;\n        out[2][0] = new_primary_b.x;\n        out[2][1] = new_primary_b.y;\n        return out;\n\n    \}\n\n    void init() \{\n        pi = 3.1415926535f;\n    \}\n\n    void process() \{\n\n        float2 dst_whitepoint = u_src_whitepoint + u_whitepoint_pre_offset;\n\n        float3x3 inset_colorspace;\n        inset_colorspace = get_inset_colorspace(\n            u_src_primary_r,\n            u_src_primary_g,\n            u_src_primary_b,\n            dst_whitepoint,\n            u_inset_r,\n            u_inset_g,\n            u_inset_b\n        );\n\n        float2 primary_r_inset(inset_colorspace[0][0], inset_colorspace[0][1]);\n        float2 primary_g_inset(inset_colorspace[1][0], inset_colorspace[1][1]);\n        float2 primary_b_inset(inset_colorspace[2][0], inset_colorspace[2][1]);\n\n        primary_r_inset = rotate_point_around(\n            primary_r_inset, u_rotate_r * (pi/180), dst_whitepoint\n        );\n        primary_g_inset = rotate_point_around(\n            primary_g_inset, u_rotate_g * (pi/180), dst_whitepoint\n        );\n        primary_b_inset = rotate_point_around(\n            primary_b_inset, u_rotate_b * (pi/180), dst_whitepoint\n        );\n\n        float3x3 dst_to_xyz;\n\n        if (\n            are_chromaticities_identity(\n                primary_r_inset, primary_g_inset, primary_b_inset\n            )\n        ) \{\n            dst_to_xyz.setIdentity();\n        \} else \{\n            dst_to_xyz = normalised_primary_matrix(\n                primary_r_inset,\n                primary_g_inset,\n                primary_b_inset,\n                dst_whitepoint + u_whitepoint_post_offset\n            );\n            dst_to_xyz = dst_to_xyz.invert();\n        \}\n\n        float3x3 src_to_xyz;\n\n        if (\n            are_chromaticities_identity(\n                u_src_primary_r, u_src_primary_g, u_src_primary_b\n            )\n        ) \{\n            src_to_xyz.setIdentity();\n        \} else \{\n            src_to_xyz = normalised_primary_matrix(\n                u_src_primary_r,\n                u_src_primary_g,\n                u_src_primary_b,\n                u_src_whitepoint\n            );\n        \}\n\n        float3x3 conversion_matrix;\n        conversion_matrix = dst_to_xyz * src_to_xyz;\n        if (!(u_invert))\{\n            conversion_matrix = conversion_matrix.invert();\n        \}\n\n        float4 rgba = src();\n        float3 converted_rgb(rgba.x, rgba.y, rgba.z);\n        converted_rgb = mult_f3_by_f3x3(converted_rgb, conversion_matrix);\n        dst() = float4(\n            converted_rgb.x,\n            converted_rgb.y,\n            converted_rgb.z,\n            rgba.w\n        );\n    \}\n\};"
+   rebuild ""
+   InsetPrimaries_u_src_primary_r {
+      {{parent.primary_r.x}}
+      {{parent.primary_r.y}}
      }
-   invert true
+   InsetPrimaries_u_src_primary_g {
+       {{parent.primary_g.x}}
+       {{parent.primary_g.y}}
+     }
+   InsetPrimaries_u_src_primary_b {
+       {{parent.primary_b.x}}
+       {{parent.primary_b.y}}
+     }
+   InsetPrimaries_u_src_whitepoint {
+       {{parent.whitepoint.x}}
+       {{parent.whitepoint.y}}
+     }
+   InsetPrimaries_u_inset_r {{parent.inset_r}}
+   InsetPrimaries_u_inset_g {{parent.inset_g}}
+   InsetPrimaries_u_inset_b {{parent.inset_b}}
+   InsetPrimaries_u_rotate_r {{parent.rotate_r}}
+   InsetPrimaries_u_rotate_g {{parent.rotate_g}}
+   InsetPrimaries_u_rotate_b {{parent.rotate_b}}
+   InsetPrimaries_u_whitepoint_pre_offset {
+       {{parent.whitepoint_pre_offset_x}}
+       {{parent.whitepoint_pre_offset_y}}
+     }
+   InsetPrimaries_u_whitepoint_post_offset {
+       {{parent.whitepoint_post_offset_x}}
+       {{parent.whitepoint_post_offset_y}}
+     }
+   InsetPrimaries_u_invert {{parent.invert_inset}}
+   format "2048 2048 0 0 2048 2048 1 square_2K"
+   rebuild_finalise ""
+   name InsetBlink
+   xpos 0
+   ypos 100
   }
  Switch {
   inputs 2
   which {{parent.plot_show}}
-  name SwitchDirection
+  name SwitchPlotShow
   xpos 0
-  ypos 400
+  ypos 300
  }
  Output {
   name Output1
   xpos 0
-  ypos 500
+  ypos 350
  }
 end_group
