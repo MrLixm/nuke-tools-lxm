@@ -1,5 +1,5 @@
 // version 1
-kernel InsetPrimaries : ImageComputationKernel<ePixelWise>
+kernel InsetPrimariesPlot : ImageComputationKernel<ePixelWise>
 {
     Image<eRead, eAccessPoint, eEdgeClamped> src;
     Image<eWrite> dst;
@@ -83,9 +83,8 @@ kernel InsetPrimaries : ImageComputationKernel<ePixelWise>
 
     float draw_point(float2 center, float radius){
         // all units in pixel space
-        return clamp(
-            radius - sqrt(pow(center.x, 2) + pow(center.y, 2)), 0, 1
-        );
+        float point = radius - sqrt(pow(center.x, 2) + pow(center.y, 2));
+        return clamp(point, 0.0f, 1.0f);
     }
 
     float draw_torus(float2 center, float radius, float inner_radius){
