@@ -19,8 +19,10 @@ scene.
 - That's it
 
 System :
-- PrimariesInset use python code but works on non-commercial versions.
-- The code _should_ be python 2 compatible but has only been tested on latest
+- PrimariesInset uses:
+  - python code for `Presets` but works on non-commercial versions.
+  - blink script but works on non-commercial versions >= 14.0
+- The python code _should_ be python 2 compatible but has only been tested on latest
 python3 versions of Nuke.
 
 ## Usage
@@ -42,4 +44,3 @@ See the [./src/](./src) folder for the original files that create the final node
 
 - [ ] add images in README
 - [ ] fix NO_HANDLE flag issue that doesn't seems to work
-- [ ] see if need to add primaries offset like for whitepoint
