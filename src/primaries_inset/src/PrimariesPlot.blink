@@ -1,4 +1,4 @@
-// version 1
+// version 2
 kernel InsetPrimariesPlot : ImageComputationKernel<ePixelWise>
 {
     Image<eRead, eAccessPoint, eEdgeClamped> src;
@@ -23,6 +23,12 @@ kernel InsetPrimariesPlot : ImageComputationKernel<ePixelWise>
     local:
         float pi;
         float2 workspace_scale;
+
+    void define(){
+        defineParam(u_point_scale, "u_point_scale", 15.0f);
+        defineParam(u_outline_scale, "u_outline_scale", 0.75f);
+        defineParam(u_margins, "u_margins", 50.0f);
+    }
 
     float lerp(float a1, float a2, float amount){
         // linear interpolation between 2 values
