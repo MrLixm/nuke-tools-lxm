@@ -1,10 +1,11 @@
-// version 3
+// version 6
 kernel InsetPrimaries : ImageComputationKernel<ePixelWise>
 {
     Image<eRead, eAccessPoint, eEdgeClamped> src;
     Image<eWrite> dst;
 
     param:
+        bool u_invert;
         float2 u_src_primary_r;
         float2 u_src_primary_g;
         float2 u_src_primary_b;
@@ -15,7 +16,8 @@ kernel InsetPrimaries : ImageComputationKernel<ePixelWise>
         float u_rotate_r;
         float u_rotate_g;
         float u_rotate_b;
-        bool u_invert;
+        float2 u_whitepoint_pre_offset;
+        float2 u_whitepoint_post_offset;
 
     local:
         float pi;
@@ -146,12 +148,14 @@ kernel InsetPrimaries : ImageComputationKernel<ePixelWise>
 
     void process() {
 
+        float2 dst_whitepoint = u_src_whitepoint + u_whitepoint_pre_offset;
+
         float3x3 inset_colorspace;
         inset_colorspace = get_inset_colorspace(
             u_src_primary_r,
             u_src_primary_g,
             u_src_primary_b,
-            u_src_whitepoint,
+            dst_whitepoint,
             u_inset_r,
             u_inset_g,
             u_inset_b
@@ -162,13 +166,13 @@ kernel InsetPrimaries : ImageComputationKernel<ePixelWise>
         float2 primary_b_inset(inset_colorspace[2][0], inset_colorspace[2][1]);
 
         primary_r_inset = rotate_point_around(
-            primary_r_inset, u_rotate_r * (pi/180), u_src_whitepoint
+            primary_r_inset, u_rotate_r * (pi/180), dst_whitepoint
         );
         primary_g_inset = rotate_point_around(
-            primary_g_inset, u_rotate_g * (pi/180), u_src_whitepoint
+            primary_g_inset, u_rotate_g * (pi/180), dst_whitepoint
         );
         primary_b_inset = rotate_point_around(
-            primary_b_inset, u_rotate_b * (pi/180), u_src_whitepoint
+            primary_b_inset, u_rotate_b * (pi/180), dst_whitepoint
         );
 
         float3x3 dst_to_xyz;
@@ -184,7 +188,7 @@ kernel InsetPrimaries : ImageComputationKernel<ePixelWise>
                 primary_r_inset,
                 primary_g_inset,
                 primary_b_inset,
-                u_src_whitepoint
+                dst_whitepoint + u_whitepoint_post_offset
             );
             dst_to_xyz = dst_to_xyz.invert();
         }

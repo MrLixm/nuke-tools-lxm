@@ -1,4 +1,4 @@
-// version 2
+// version 3
 kernel InsetPrimariesPlot : ImageComputationKernel<ePixelWise>
 {
     Image<eRead, eAccessPoint, eEdgeClamped> src;
@@ -16,6 +16,8 @@ kernel InsetPrimariesPlot : ImageComputationKernel<ePixelWise>
         float u_rotate_g;
         float u_rotate_b;
         bool u_invert;
+        float2 u_whitepoint_pre_offset;
+        float2 u_whitepoint_post_offset;
         float u_point_scale;
         float u_outline_scale;
         float u_margins;
@@ -116,13 +118,15 @@ kernel InsetPrimariesPlot : ImageComputationKernel<ePixelWise>
 
     void process(int2 pos) {
 
+        float2 dst_whitepoint = u_src_whitepoint + u_whitepoint_pre_offset;
+
         // 1. calculate inset gamut
         float3x3 inset_colorspace;
         inset_colorspace = get_inset_colorspace(
             u_src_primary_r,
             u_src_primary_g,
             u_src_primary_b,
-            u_src_whitepoint,
+            dst_whitepoint,
             u_inset_r,
             u_inset_g,
             u_inset_b
@@ -133,13 +137,13 @@ kernel InsetPrimariesPlot : ImageComputationKernel<ePixelWise>
         float2 primary_b_inset(inset_colorspace[2][0], inset_colorspace[2][1]);
 
         primary_r_inset = rotate_point_around(
-            primary_r_inset, u_rotate_r * (pi/180), u_src_whitepoint
+            primary_r_inset, u_rotate_r * (pi/180), dst_whitepoint
         );
         primary_g_inset = rotate_point_around(
-            primary_g_inset, u_rotate_g * (pi/180), u_src_whitepoint
+            primary_g_inset, u_rotate_g * (pi/180), dst_whitepoint
         );
         primary_b_inset = rotate_point_around(
-            primary_b_inset, u_rotate_b * (pi/180), u_src_whitepoint
+            primary_b_inset, u_rotate_b * (pi/180), dst_whitepoint
         );
 
         float point_r_weight = 0.0;
@@ -180,7 +184,9 @@ kernel InsetPrimariesPlot : ImageComputationKernel<ePixelWise>
             point_center, u_point_scale, u_point_scale * u_outline_scale
         );
 
-        point_center = convert_CIExy_to_workspace(u_src_whitepoint, pos);
+        point_center = convert_CIExy_to_workspace(
+            dst_whitepoint + u_whitepoint_post_offset, pos
+        );
         point_w_weight += draw_torus(
             point_center, u_point_scale, u_point_scale * u_outline_scale
         );
