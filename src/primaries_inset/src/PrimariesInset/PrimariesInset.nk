@@ -19,15 +19,6 @@ Group {
  addUserKnob {12 whitepoint l "whitepoint" +STARTLINE +NO_HANDLES}
  whitepoint {0.3127 0.329}
  addUserKnob {26 "" +STARTLINE}
- addUserKnob {26 txt_plot l "" +STARTLINE T "<h1> Plot </h1>"}
- addUserKnob {6 plot_show l "show"}
- addUserKnob {7 point_size l "point size" R 0 100}
- point_size 15
- addUserKnob {7 point_outline_scale l "outline scale" R 0 1}
- point_outline_scale 0.75
- addUserKnob {7 plot_margins l "margins" R 0 500}
- plot_margins 150
- addUserKnob {26 "" +STARTLINE}
  addUserKnob {26 txt_options l "" +STARTLINE T "<h1> Options</h1>"}
  addUserKnob {6 invert_inset l "Invert Inset (Outset)" +STARTLINE}
  addUserKnob {7 inset l "inset" t "inset all primaries towards whitepoint"}
@@ -39,6 +30,15 @@ Group {
  addUserKnob {7 rotate_b l "rotate B" t "rotate the blue primary around the whitepoint; in degrees." R -90 90}
  addUserKnob {7 whitepoint_offset_x l "whitepoint offset x" R -0.5 0.5}
  addUserKnob {7 whitepoint_offset_y l "whitepoint offset y" R -0.5 0.5}
+ addUserKnob {26 "" +STARTLINE}
+ addUserKnob {26 txt_plot l "" +STARTLINE T "<h1> Plot </h1>"}
+ addUserKnob {6 plot_show l "show"}
+ addUserKnob {7 point_size l "point size" R 0 100}
+ point_size 15
+ addUserKnob {7 point_outline_scale l "outline scale" R 0 1}
+ point_outline_scale 0.75
+ addUserKnob {7 plot_margins l "margins" R 0 500}
+ plot_margins 150
  addUserKnob {20 _Private}
  addUserKnob {7 inset_r}
  inset_r {{"min(u_inset_r + inset, 1)"}}
