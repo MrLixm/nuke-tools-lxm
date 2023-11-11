@@ -1,0 +1,190 @@
+// version 1
+kernel InsetPrimaries : ImageComputationKernel<ePixelWise>
+{
+    Image<eRead, eAccessPoint, eEdgeClamped> src;
+    Image<eWrite> dst;
+
+    param:
+        float2 u_src_primary_r;
+        float2 u_src_primary_g;
+        float2 u_src_primary_b;
+        float2 u_src_whitepoint;
+        float u_inset_r;
+        float u_inset_g;
+        float u_inset_b;
+        float u_rotate_r;
+        float u_rotate_g;
+        float u_rotate_b;
+        bool u_invert;
+        float u_point_scale;
+        float u_outline_scale;
+        float u_margins;
+
+    local:
+        float pi;
+        float2 workspace_scale;
+
+    float lerp(float a1, float a2, float amount){
+        // linear interpolation between 2 values
+        return (1.0 - amount) * a1 + amount * a2;
+    }
+
+    float2 rotate_point_around(float2 point, float angle, float2 center){
+        // angle: in radians
+        // https://stackoverflow.com/a/2259502/13806195
+
+        float s = sin(angle);
+        float c = cos(angle);
+
+        // translate point back to origin:
+        point.x -= center.x;
+        point.y -= center.y;
+
+        // rotate point
+        float xnew = point.x * c - point.y * s;
+        float ynew = point.x * s + point.y * c;
+
+        // translate point back:
+        point.x = xnew + center.x;
+        point.y = ynew + center.y;
+        return point;
+    }
+
+    float3x3 get_inset_colorspace(
+        float2 primary_r,
+        float2 primary_g,
+        float2 primary_b,
+        float2 whitepoint,
+        float inset_r,
+        float inset_g,
+        float inset_b
+    ){
+        float2 new_primary_r;
+        float2 new_primary_g;
+        float2 new_primary_b;
+
+        new_primary_r.x = lerp(primary_r.x, whitepoint.x, inset_r);
+        new_primary_r.y = lerp(primary_r.y, whitepoint.y, inset_r);
+        new_primary_g.x = lerp(primary_g.x, whitepoint.x, inset_g);
+        new_primary_g.y = lerp(primary_g.y, whitepoint.y, inset_g);
+        new_primary_b.x = lerp(primary_b.x, whitepoint.x, inset_b);
+        new_primary_b.y = lerp(primary_b.y, whitepoint.y, inset_b);
+
+        float3x3 out;
+        out[0][0] = new_primary_r.x;
+        out[0][1] = new_primary_r.y;
+        out[1][0] = new_primary_g.x;
+        out[1][1] = new_primary_g.y;
+        out[2][0] = new_primary_b.x;
+        out[2][1] = new_primary_b.y;
+        return out;
+
+    }
+
+    float draw_point(float2 center, float radius){
+        // all units in pixel space
+        return clamp(
+            radius - sqrt(pow(center.x, 2) + pow(center.y, 2)), 0, 1
+        );
+    }
+
+    float draw_torus(float2 center, float radius, float inner_radius){
+        // all units in pixel space
+        return draw_point(center, radius) * (1 - draw_point(center, inner_radius));
+    }
+
+    float2 convert_CIExy_to_workspace(float2 CIExy, float2 pos){
+        // CIExy is 0-1 range
+        // output in pixel space base on workspace_scale
+        return float2(pos.x, pos.y) - (
+            CIExy * workspace_scale + float2(u_margins, u_margins)
+        );
+    }
+
+    void init(int2 pos) {
+        workspace_scale = float2(
+            src.bounds.width() - u_margins * 2,
+            src.bounds.height() - u_margins * 2
+        );
+        pi = 3.1415926535f;
+    }
+
+    void process(int2 pos) {
+
+        // 1. calculate inset gamut
+        float3x3 inset_colorspace;
+        inset_colorspace = get_inset_colorspace(
+            u_src_primary_r,
+            u_src_primary_g,
+            u_src_primary_b,
+            u_src_whitepoint,
+            u_inset_r,
+            u_inset_g,
+            u_inset_b
+        );
+
+        float2 primary_r_inset(inset_colorspace[0][0], inset_colorspace[0][1]);
+        float2 primary_g_inset(inset_colorspace[1][0], inset_colorspace[1][1]);
+        float2 primary_b_inset(inset_colorspace[2][0], inset_colorspace[2][1]);
+
+        primary_r_inset = rotate_point_around(
+            primary_r_inset, u_rotate_r * (pi/180), u_src_whitepoint
+        );
+        primary_g_inset = rotate_point_around(
+            primary_g_inset, u_rotate_g * (pi/180), u_src_whitepoint
+        );
+        primary_b_inset = rotate_point_around(
+            primary_b_inset, u_rotate_b * (pi/180), u_src_whitepoint
+        );
+
+        float point_r_weight = 0.0;
+        float point_g_weight = 0.0;
+        float point_b_weight = 0.0;
+        float point_w_weight = 0.0;
+
+        float2 point_center(0,0);
+
+        // 2. start drawing in pixel space
+
+        // 2.1 draw src primaries
+        point_center = convert_CIExy_to_workspace(u_src_primary_r, pos);
+        point_r_weight = draw_point(point_center, u_point_scale * u_outline_scale * 0.5);
+
+        point_center = convert_CIExy_to_workspace(u_src_primary_g, pos);
+        point_g_weight = draw_point(point_center, u_point_scale * u_outline_scale * 0.5);
+
+        point_center = convert_CIExy_to_workspace(u_src_primary_b, pos);
+        point_b_weight = draw_point(point_center, u_point_scale * u_outline_scale * 0.5);
+
+        point_center = convert_CIExy_to_workspace(u_src_whitepoint, pos);
+        point_w_weight = draw_point(point_center, u_point_scale * u_outline_scale * 0.5);
+
+        // 2.2 draw inset primaries
+        point_center = convert_CIExy_to_workspace(primary_r_inset, pos);
+        point_r_weight += draw_torus(
+            point_center, u_point_scale, u_point_scale * u_outline_scale
+        );
+
+        point_center = convert_CIExy_to_workspace(primary_g_inset, pos);
+        point_g_weight += draw_torus(
+            point_center, u_point_scale, u_point_scale * u_outline_scale
+        );
+
+        point_center = convert_CIExy_to_workspace(primary_b_inset, pos);
+        point_b_weight += draw_torus(
+            point_center, u_point_scale, u_point_scale * u_outline_scale
+        );
+
+        point_center = convert_CIExy_to_workspace(u_src_whitepoint, pos);
+        point_w_weight += draw_torus(
+            point_center, u_point_scale, u_point_scale * u_outline_scale
+        );
+
+        point_r_weight = max(point_r_weight, point_w_weight);
+        point_g_weight = max(point_g_weight, point_w_weight);
+        point_b_weight = max(point_b_weight, point_w_weight);
+        float alpha = max(max(point_r_weight, point_g_weight), point_b_weight);
+
+        dst() = float4(point_r_weight, point_g_weight, point_b_weight, alpha);
+    }
+};
