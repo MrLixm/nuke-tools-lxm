@@ -1,4 +1,4 @@
-// version 2
+// version 3
 kernel InsetPrimaries : ImageComputationKernel<ePixelWise>
 {
     Image<eRead, eAccessPoint, eEdgeClamped> src;
@@ -87,7 +87,7 @@ kernel InsetPrimaries : ImageComputationKernel<ePixelWise>
         float3 C;
         C = mult_f3_by_f3x3(W,P.invert());
 
-        float3x3 Cm;
+        float3x3 Cm(0,0,0,0,0,0,0,0,0);
         Cm[0][0] = C.x;
         Cm[1][1] = C.y;
         Cm[2][2] = C.z;
