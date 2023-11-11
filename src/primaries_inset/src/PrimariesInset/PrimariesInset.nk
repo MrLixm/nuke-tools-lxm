@@ -28,10 +28,11 @@ Group {
  addUserKnob {7 rotate_r l "rotate R" t "rotate the red primary around the whitepoint; in degrees." R -90 90}
  addUserKnob {7 rotate_g l "rotate G" t "rotate the green primary around the whitepoint; in degrees." R -90 90}
  addUserKnob {7 rotate_b l "rotate B" t "rotate the blue primary around the whitepoint; in degrees." R -90 90}
- addUserKnob {7 whitepoint_pre_offset_x l "whitepoint pre offset x" R -0.5 0.5}
- addUserKnob {7 whitepoint_pre_offset_y l "whitepoint pre offset y" R -0.5 0.5}
- addUserKnob {7 whitepoint_post_offset_x l "whitepoint post offset x" R -0.5 0.5}
- addUserKnob {7 whitepoint_post_offset_y l "whitepoint post offset y" R -0.5 0.5}
+ addUserKnob {26 txt_whitepoint l "" +STARTLINE T "<h2> Whitepoint</h2>"}
+ addUserKnob {7 whitepoint_pre_offset_x l "pre offset x" t "creative shift of the whitepoint; affect inset" R -0.5 0.5}
+ addUserKnob {7 whitepoint_pre_offset_y l "pre offset y" t "creative shift of the whitepoint; affect inset" R -0.5 0.5}
+ addUserKnob {7 whitepoint_post_offset_x l "post offset x" t "creative shift of the whitepoint; does NOT affect inset and might lead to hue shifts" R -0.5 0.5}
+ addUserKnob {7 whitepoint_post_offset_y l "post offset y" t "creative shift of the whitepoint; does NOT affect inset and might lead to hue shifts" R -0.5 0.5}
  addUserKnob {26 "" +STARTLINE}
  addUserKnob {26 txt_plot l "" +STARTLINE T "<h1> Plot </h1>"}
  addUserKnob {6 plot_show l "show"}
@@ -50,7 +51,7 @@ Group {
  inset_b {{"min(u_inset_b + inset, 1)"}}
  addUserKnob {20 About}
  addUserKnob {26 toolName l name T PrimariesInset}
- addUserKnob {26 toolVersion l version T 0.5.0}
+ addUserKnob {26 toolVersion l version T 0.5.1}
  addUserKnob {26 toolAuthor l author T "<a style=\"color: rgb(200,200,200);\" href=\"https://mrlixm.github.io/\">Liam Collod</a>"}
  addUserKnob {26 toolDescription l description T "Reshape a colorspace gamut and plot it on the CIE xy space."}
  addUserKnob {26 toolUrl l url T "<a style=\"color: rgb(200,200,200);\" href=\"https://github.com/MrLixm/Foundry_Nuke\">https://github.com/MrLixm/Foundry_Nuke</a>"}
