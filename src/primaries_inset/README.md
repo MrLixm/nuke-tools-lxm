@@ -7,8 +7,40 @@ CIE xy graph plot.
 The reshape transformation is called an "inset" as we are creating a smaller
 gamut than the original.
 
-This is the main concept behind [the AgX DRT](https://github.com/MrLixm/AgXc).
+This is the main concept behind [the AgX DRT](https://github.com/MrLixm/AgXc) which
+was also [ported to darktable](https://github.com/darktable-org/darktable/pull/15104).
 
+![nuke screenshot with PrimariesInset enable](doc/img/demo-inset-on.png)
+
+And disabled :
+
+![nuke screenshot with PrimariesInset disabled](doc/img/demo-inset-off.png)
+
+The above example is in the context of a traditional ACES workflow (note the
+ACES view-transform in the viewer) but could be used with any other "tonemapping".
+
+The PrimaryInset operation works closely with the application of a 1D tonescale curve
+(usually reffered as tonemapping) after itself.
+
+If you find the effect of the Inset too strong and just woudl like to fix those
+very saturated camera artefact it's possible to apply an outset after the inset :
+
+![nuke screenshot of the outset workflow](doc/img/demo-outset.png)
+
+Unfortunately the workflow require to bake the view transform in the chain
+(OCIO Display node) :
+1. apply ACES view-transform
+2. revert the sRGB EOTF conversion to get back ACEScg value 
+3. duplicate the first `PrimaryInset` node but check the `Invert` option
+4. reapply the sRGB EOTF conversion
+
+## plotting
+
+It is possible to preview the new inset colorspace as a plot in the CIE1931 xy space.
+
+Just check the `show` checkbox next to the `Plot` title.
+
+![nuke gif of the plot being edited interactively](doc/img/demo-plot.gif)
 
 # Instructions
 
@@ -42,5 +74,4 @@ See the [./src/](./src) folder for the original files that create the final node
 
 ## TODO
 
-- [ ] add images in README
 - [ ] fix NO_HANDLE flag issue that doesn't seems to work
