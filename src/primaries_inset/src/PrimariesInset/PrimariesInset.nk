@@ -1,0 +1,175 @@
+Group {
+ name PrimariesInset1
+ tile_color 0x3a755e00
+ note_font_color 0xefefefff
+ addUserKnob {20 User l GamutPlot}
+ addUserKnob {26 txt_colorspace l "" +STARTLINE T "<h1> Colorspace</h1>"}
+ addUserKnob {26 txt_colorspace_d l "" +STARTLINE T "<i>Define the colorspace to inset.</i>"}
+ addUserKnob {26 txt_sep1 l "" +STARTLINE T " "}
+ addUserKnob {4 colorspace_preset l Preset M {ACES2065-1 ACEScg ACESproxy "ARRI Wide Gamut 3" "ARRI Wide Gamut 4" "Adobe RGB (1998)" "Adobe Wide Gamut RGB" "Blackmagic Wide Gamut" DCI-P3 DCI-P3-P "DJI D-Gamut" DRAGONcolor DRAGONcolor2 "DaVinci Wide Gamut" "Display P3" F-Gamut "FilmLight E-Gamut" "ITU-R BT.2020" "ITU-R BT.709" P3-D65 "ProPhoto RGB" REDWideGamutRGB REDcolor REDcolor2 REDcolor3 REDcolor4 S-Gamut S-Gamut3 S-Gamut3.Cine V-Gamut "Venice S-Gamut3" "Venice S-Gamut3.Cine" sRGB}}
+ addUserKnob {22 preset_apply l apply -STARTLINE T "# filled by build"}
+ addUserKnob {26 "" +STARTLINE}
+ addUserKnob {12 primary_r l "primary R" +STARTLINE +NO_HANDLES}
+ primary_r {0.64 0.33}
+ addUserKnob {12 primary_g l "primary G" +STARTLINE +NO_HANDLES}
+ primary_g {0.3 0.6}
+ addUserKnob {12 primary_b l "primary B" +STARTLINE +NO_HANDLES}
+ primary_b {0.15 0.06}
+ addUserKnob {26 "" +STARTLINE}
+ addUserKnob {12 whitepoint l "whitepoint" +STARTLINE +NO_HANDLES}
+ whitepoint {0.3127 0.329}
+ addUserKnob {26 "" +STARTLINE}
+ addUserKnob {26 txt_options l "" +STARTLINE T "<h1> Options</h1>"}
+ addUserKnob {6 invert_inset l "Invert Inset (Outset)" +STARTLINE}
+ addUserKnob {7 inset l "inset" t "inset all primaries towards whitepoint"}
+ addUserKnob {7 u_inset_r l "inset R" t "inset red primary towards whitepoint"}
+ addUserKnob {7 u_inset_g l "inset G" t "inset green primary towards whitepoint"}
+ addUserKnob {7 u_inset_b l "inset B" t "inset blue primary towards whitepoint"}
+ addUserKnob {7 rotate_r l "rotate R" t "rotate the red primary around the whitepoint; in degrees." R -90 90}
+ addUserKnob {7 rotate_g l "rotate G" t "rotate the green primary around the whitepoint; in degrees." R -90 90}
+ addUserKnob {7 rotate_b l "rotate B" t "rotate the blue primary around the whitepoint; in degrees." R -90 90}
+ addUserKnob {26 txt_whitepoint l "" +STARTLINE T "<h2> Whitepoint</h2>"}
+ addUserKnob {7 whitepoint_pre_offset_x l "pre offset x" t "creative shift of the whitepoint; affect inset" R -0.5 0.5}
+ addUserKnob {7 whitepoint_pre_offset_y l "pre offset y" t "creative shift of the whitepoint; affect inset" R -0.5 0.5}
+ addUserKnob {7 whitepoint_post_offset_x l "post offset x" t "creative shift of the whitepoint; does NOT affect inset and might lead to hue shifts" R -0.5 0.5}
+ addUserKnob {7 whitepoint_post_offset_y l "post offset y" t "creative shift of the whitepoint; does NOT affect inset and might lead to hue shifts" R -0.5 0.5}
+ addUserKnob {26 "" +STARTLINE}
+ addUserKnob {26 txt_plot l "" +STARTLINE T "<h1> Plot </h1>"}
+ addUserKnob {6 plot_show l "show"}
+ addUserKnob {7 point_size l "point size" R 0 100}
+ point_size 15
+ addUserKnob {7 point_outline_scale l "outline scale" R 0 1}
+ point_outline_scale 0.75
+ addUserKnob {7 plot_margins l "margins" R 0 500}
+ plot_margins 150
+ addUserKnob {20 _Private}
+ addUserKnob {7 inset_r}
+ inset_r {{"min(u_inset_r + inset, 1)"}}
+ addUserKnob {7 inset_g}
+ inset_g {{"min(u_inset_g + inset, 1)"}}
+ addUserKnob {7 inset_b}
+ inset_b {{"min(u_inset_b + inset, 1)"}}
+ addUserKnob {20 About}
+ addUserKnob {26 toolName l name T PrimariesInset}
+ addUserKnob {26 toolVersion l version T 0.5.1}
+ addUserKnob {26 toolAuthor l author T "<a style=\"color: rgb(200,200,200);\" href=\"https://mrlixm.github.io/\">Liam Collod</a>"}
+ addUserKnob {26 toolDescription l description T "Reshape a colorspace gamut and plot it on the CIE xy space."}
+ addUserKnob {26 toolUrl l url T "<a style=\"color: rgb(200,200,200);\" href=\"https://github.com/MrLixm/Foundry_Nuke\">https://github.com/MrLixm/Foundry_Nuke</a>"}
+}
+ Input {
+  inputs 0
+  name image
+  xpos 0
+  ypos 0
+ }
+ set N1aabb660 [stack 0]
+  Constant {
+   format "1024 1024 0 0 1024 1024 1 square_1k"
+   name GraphArea
+   xpos 200
+   ypos 0
+   postage_stamp false
+  }
+  BlinkScript {
+   inputs 1
+   recompileCount 1
+   KernelDescription "%PLOT_BLINK_DESC%"
+   kernelSource "%PLOT_BLINK_SRC%"
+   rebuild ""
+   InsetPrimariesPlot_u_src_primary_r {
+      {{parent.primary_r.x}}
+      {{parent.primary_r.y}}
+     }
+   InsetPrimariesPlot_u_src_primary_g {
+       {{parent.primary_g.x}}
+       {{parent.primary_g.y}}
+     }
+   InsetPrimariesPlot_u_src_primary_b {
+       {{parent.primary_b.x}}
+       {{parent.primary_b.y}}
+     }
+   InsetPrimariesPlot_u_src_whitepoint {
+       {{parent.whitepoint.x}}
+       {{parent.whitepoint.y}}
+     }
+   InsetPrimariesPlot_u_inset_r {{parent.inset_r}}
+   InsetPrimariesPlot_u_inset_g {{parent.inset_g}}
+   InsetPrimariesPlot_u_inset_b {{parent.inset_b}}
+   InsetPrimariesPlot_u_rotate_r {{parent.rotate_r}}
+   InsetPrimariesPlot_u_rotate_g {{parent.rotate_g}}
+   InsetPrimariesPlot_u_rotate_b {{parent.rotate_b}}
+   InsetPrimariesPlot_u_whitepoint_pre_offset {
+       {{parent.whitepoint_pre_offset_x}}
+       {{parent.whitepoint_pre_offset_y}}
+     }
+   InsetPrimariesPlot_u_whitepoint_post_offset {
+       {{parent.whitepoint_post_offset_x}}
+       {{parent.whitepoint_post_offset_y}}
+     }
+   InsetPrimariesPlot_u_invert {{parent.invert_inset}}
+   InsetPrimariesPlot_u_point_scale {{parent.point_size}}
+   InsetPrimariesPlot_u_outline_scale {{parent.point_outline_scale}}
+   InsetPrimariesPlot_u_margins {{parent.plot_margins}}
+   format "2048 2048 0 0 2048 2048 1 square_2K"
+   rebuild_finalise ""
+   name InsetPlotBlink
+   xpos 200
+   ypos 200
+  }
+ push $N1aabb660
+  BlinkScript {
+   inputs 1
+   recompileCount 1
+   KernelDescription "%INSET_BLINK_DESC%"
+   kernelSource "%INSET_BLINK_SRC%"
+   rebuild ""
+   InsetPrimaries_u_src_primary_r {
+      {{parent.primary_r.x}}
+      {{parent.primary_r.y}}
+     }
+   InsetPrimaries_u_src_primary_g {
+       {{parent.primary_g.x}}
+       {{parent.primary_g.y}}
+     }
+   InsetPrimaries_u_src_primary_b {
+       {{parent.primary_b.x}}
+       {{parent.primary_b.y}}
+     }
+   InsetPrimaries_u_src_whitepoint {
+       {{parent.whitepoint.x}}
+       {{parent.whitepoint.y}}
+     }
+   InsetPrimaries_u_inset_r {{parent.inset_r}}
+   InsetPrimaries_u_inset_g {{parent.inset_g}}
+   InsetPrimaries_u_inset_b {{parent.inset_b}}
+   InsetPrimaries_u_rotate_r {{parent.rotate_r}}
+   InsetPrimaries_u_rotate_g {{parent.rotate_g}}
+   InsetPrimaries_u_rotate_b {{parent.rotate_b}}
+   InsetPrimaries_u_whitepoint_pre_offset {
+       {{parent.whitepoint_pre_offset_x}}
+       {{parent.whitepoint_pre_offset_y}}
+     }
+   InsetPrimaries_u_whitepoint_post_offset {
+       {{parent.whitepoint_post_offset_x}}
+       {{parent.whitepoint_post_offset_y}}
+     }
+   InsetPrimaries_u_invert {{parent.invert_inset}}
+   format "2048 2048 0 0 2048 2048 1 square_2K"
+   rebuild_finalise ""
+   name InsetBlink
+   xpos 0
+   ypos 100
+  }
+ Switch {
+  inputs 2
+  which {{parent.plot_show}}
+  name SwitchPlotShow
+  xpos 0
+  ypos 300
+ }
+ Output {
+  name Output1
+  xpos 0
+  ypos 350
+ }
+end_group

@@ -1,0 +1,229 @@
+// version 6
+kernel InsetPrimaries : ImageComputationKernel<ePixelWise>
+{
+    Image<eRead, eAccessPoint, eEdgeClamped> src;
+    Image<eWrite> dst;
+
+    param:
+        bool u_invert;
+        float2 u_src_primary_r;
+        float2 u_src_primary_g;
+        float2 u_src_primary_b;
+        float2 u_src_whitepoint;
+        float u_inset_r;
+        float u_inset_g;
+        float u_inset_b;
+        float u_rotate_r;
+        float u_rotate_g;
+        float u_rotate_b;
+        float2 u_whitepoint_pre_offset;
+        float2 u_whitepoint_post_offset;
+
+    local:
+        float pi;
+
+    float lerp(float a1, float a2, float amount){
+        // linear interpolation between 2 values
+        return (1.0 - amount) * a1 + amount * a2;
+    }
+
+    float2 rotate_point_around(float2 point, float angle, float2 center){
+        // angle: in radians
+        // https://stackoverflow.com/a/2259502/13806195
+
+        float s = sin(angle);
+        float c = cos(angle);
+
+        // translate point back to origin:
+        point.x -= center.x;
+        point.y -= center.y;
+
+        // rotate point
+        float xnew = point.x * c - point.y * s;
+        float ynew = point.x * s + point.y * c;
+
+        // translate point back:
+        point.x = xnew + center.x;
+        point.y = ynew + center.y;
+        return point;
+    }
+
+    float3 mult_f3_by_f3x3(float3 vector, float3x3 matrix) {
+        return float3(
+            matrix[0][0] * vector.x + matrix[0][1] * vector.y + matrix[0][2] * vector.z,
+            matrix[1][0] * vector.x + matrix[1][1] * vector.y + matrix[1][2] * vector.z,
+            matrix[2][0] * vector.x + matrix[2][1] * vector.y + matrix[2][2] * vector.z
+        );
+    }
+
+    float3x3 normalised_primary_matrix(
+        float2 primary_r,
+        float2 primary_g,
+        float2 primary_b,
+        float2 whitepoint
+    ) {
+        // Calculate the normalized primaries matrix for the specified chromaticities and whitepoint.
+        // Derived from:
+        //   SMPTE Recommended Practice - Derivation of Basic Television Color Equations
+        //   https://ieeexplore.ieee.org/document/7291155
+
+        float3x3 matrix;
+        // build a 3x3 matrix from the primaries and add a third z axis
+        matrix[0][0] = primary_r[0];
+        matrix[0][1] = primary_r[1];
+        matrix[0][2] = 1.0 - primary_r[0] - primary_r[1];
+        matrix[1][0] = primary_g[0];
+        matrix[1][1] = primary_g[1];
+        matrix[1][2] = 1.0 - primary_g[0] - primary_g[1];
+        matrix[2][0] = primary_b[0];
+        matrix[2][1] = primary_b[1];
+        matrix[2][2] = 1.0 - primary_b[0] - primary_b[1];
+
+        float Wz;
+        Wz = 1.0 - whitepoint[0] - whitepoint[1];
+        float3 W(whitepoint[0] / whitepoint[1], 1.0, Wz /  whitepoint[1]);
+
+        float3x3 P(matrix);
+        P = P.transpose();
+
+        float3 C;
+        C = mult_f3_by_f3x3(W,P.invert());
+
+        float3x3 Cm(0,0,0,0,0,0,0,0,0);
+        Cm[0][0] = C.x;
+        Cm[1][1] = C.y;
+        Cm[2][2] = C.z;
+
+        float3x3 npm;
+        npm = P * Cm;
+        return npm;
+    }
+
+    bool are_chromaticities_identity(
+        float2 primary_r,
+        float2 primary_g,
+        float2 primary_b
+    ) {
+        return (
+            primary_r.x == 1.0 && primary_r.y == 0.0 &&
+            primary_g.x == 0.0 && primary_g.y == 1.0 &&
+            primary_b.x == 0.0 && primary_b.y == 0.0
+        );
+    }
+
+    float3x3 get_inset_colorspace(
+        float2 primary_r,
+        float2 primary_g,
+        float2 primary_b,
+        float2 whitepoint,
+        float inset_r,
+        float inset_g,
+        float inset_b
+    ){
+        float2 new_primary_r;
+        float2 new_primary_g;
+        float2 new_primary_b;
+
+        new_primary_r.x = lerp(primary_r.x, whitepoint.x, inset_r);
+        new_primary_r.y = lerp(primary_r.y, whitepoint.y, inset_r);
+        new_primary_g.x = lerp(primary_g.x, whitepoint.x, inset_g);
+        new_primary_g.y = lerp(primary_g.y, whitepoint.y, inset_g);
+        new_primary_b.x = lerp(primary_b.x, whitepoint.x, inset_b);
+        new_primary_b.y = lerp(primary_b.y, whitepoint.y, inset_b);
+
+        float3x3 out;
+        out[0][0] = new_primary_r.x;
+        out[0][1] = new_primary_r.y;
+        out[1][0] = new_primary_g.x;
+        out[1][1] = new_primary_g.y;
+        out[2][0] = new_primary_b.x;
+        out[2][1] = new_primary_b.y;
+        return out;
+
+    }
+
+    void init() {
+        pi = 3.1415926535f;
+    }
+
+    void process() {
+
+        float2 dst_whitepoint = u_src_whitepoint + u_whitepoint_pre_offset;
+
+        float3x3 inset_colorspace;
+        inset_colorspace = get_inset_colorspace(
+            u_src_primary_r,
+            u_src_primary_g,
+            u_src_primary_b,
+            dst_whitepoint,
+            u_inset_r,
+            u_inset_g,
+            u_inset_b
+        );
+
+        float2 primary_r_inset(inset_colorspace[0][0], inset_colorspace[0][1]);
+        float2 primary_g_inset(inset_colorspace[1][0], inset_colorspace[1][1]);
+        float2 primary_b_inset(inset_colorspace[2][0], inset_colorspace[2][1]);
+
+        primary_r_inset = rotate_point_around(
+            primary_r_inset, u_rotate_r * (pi/180), dst_whitepoint
+        );
+        primary_g_inset = rotate_point_around(
+            primary_g_inset, u_rotate_g * (pi/180), dst_whitepoint
+        );
+        primary_b_inset = rotate_point_around(
+            primary_b_inset, u_rotate_b * (pi/180), dst_whitepoint
+        );
+
+        float3x3 dst_to_xyz;
+
+        if (
+            are_chromaticities_identity(
+                primary_r_inset, primary_g_inset, primary_b_inset
+            )
+        ) {
+            dst_to_xyz.setIdentity();
+        } else {
+            dst_to_xyz = normalised_primary_matrix(
+                primary_r_inset,
+                primary_g_inset,
+                primary_b_inset,
+                dst_whitepoint + u_whitepoint_post_offset
+            );
+            dst_to_xyz = dst_to_xyz.invert();
+        }
+
+        float3x3 src_to_xyz;
+
+        if (
+            are_chromaticities_identity(
+                u_src_primary_r, u_src_primary_g, u_src_primary_b
+            )
+        ) {
+            src_to_xyz.setIdentity();
+        } else {
+            src_to_xyz = normalised_primary_matrix(
+                u_src_primary_r,
+                u_src_primary_g,
+                u_src_primary_b,
+                u_src_whitepoint
+            );
+        }
+
+        float3x3 conversion_matrix;
+        conversion_matrix = dst_to_xyz * src_to_xyz;
+        if (!(u_invert)){
+            conversion_matrix = conversion_matrix.invert();
+        }
+
+        float4 rgba = src();
+        float3 converted_rgb(rgba.x, rgba.y, rgba.z);
+        converted_rgb = mult_f3_by_f3x3(converted_rgb, conversion_matrix);
+        dst() = float4(
+            converted_rgb.x,
+            converted_rgb.y,
+            converted_rgb.z,
+            rgba.w
+        );
+    }
+};

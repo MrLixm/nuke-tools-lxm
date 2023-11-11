@@ -25,3 +25,6 @@ coverage.xml
 # project specific
 poetry.lock
 build/
+# nuke compile blink scripts
+*.blink.src
+*.blink.desc
