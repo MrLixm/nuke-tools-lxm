@@ -25,12 +25,13 @@ the `build.py` file.
 - execute the button and check the result in the Script Editor
 - copy the first line (kernelSource) and paste into a new file named :
   - `PrimariesInset.blink.src` if it was the Inset blink script
-  - `PrimariesPloy.blink.src` if it was the Plot blink script
+  - `PrimariesPlot.blink.src` if it was the Plot blink script
 - do the same for the second line (KernelDescription) :
   - `PrimariesInset.blink.desc` if it was the Inset blink script
-  - `PrimariesPloy.blink.desc` if it was the Plot blink script
+  - `PrimariesPlot.blink.desc` if it was the Plot blink script
+- make sure you did it for the 2 blink scripts in the end
 - run `build.py`
-- check result which is `../PrimariesInset.nk` defined by `BUILD_GIZMO` variable
+- check result which is `../PrimariesInset.nk` defined by `BuildPaths.build_gizmo` variable (in build.py)
 
 You need to perform the manipulation again **everytime** one of the 2 blink script 
 is modified.
