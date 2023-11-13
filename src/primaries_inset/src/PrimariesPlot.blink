@@ -1,4 +1,4 @@
-// version 4
+// version 5
 kernel InsetPrimariesPlot : ImageComputationKernel<ePixelWise>
 {
     Image<eRead, eAccessPoint, eEdgeClamped> src;
@@ -100,10 +100,34 @@ kernel InsetPrimariesPlot : ImageComputationKernel<ePixelWise>
         return draw_point(center, radius) * (1 - draw_point(center, inner_radius));
     }
 
+    float draw_borders(float2 pos){
+        // draw a rectangle representing the limit of the CIE xy space.
+        float border_width = 2.0;
+        float2 borders_out_bl = convert_CIExy_to_workspace(float2(0.0, 0.0));
+        float2 borders_out_tr = convert_CIExy_to_workspace(float2(1.0, 1.0));
+        float2 borders_in_bl = borders_out_bl + float2(border_width, border_width);
+        float2 borders_in_tr = borders_out_tr - float2(border_width, border_width);
+        float weight = 0.0;
+        if (
+            pos.x >= borders_out_bl.x &&
+            pos.y >= borders_out_bl.y &&
+            pos.x <= borders_out_tr.x &&
+            pos.y <= borders_out_tr.y &&
+            !(
+                pos.x >= borders_in_bl.x &&
+                pos.y >= borders_in_bl.y &&
+                pos.x <= borders_in_tr.x &&
+                pos.y <= borders_in_tr.y
+            )
+        ){weight = 1.0;}
+        return weight;
+    }
+
     float2 convert_CIExy_to_workspace(float2 CIExy, float2 pos){
+    float2 convert_CIExy_to_workspace(float2 CIExy){
         // CIExy is 0-1 range
-        // output in pixel space base on workspace_scale
-        return float2(pos.x, pos.y) - (
+        // output in pixel space based on workspace_scale
+        return (
             CIExy * workspace_scale + float2(u_margins, u_margins)
         );
     }
@@ -157,37 +181,45 @@ kernel InsetPrimariesPlot : ImageComputationKernel<ePixelWise>
         // 2. start drawing in pixel space
 
         // 2.1 draw src primaries
-        point_center = convert_CIExy_to_workspace(u_src_primary_r, pos);
+        point_center = convert_CIExy_to_workspace(u_src_primary_r);
+        point_center = float2(pos.x, pos.y) - point_center;
         point_r_weight = draw_point(point_center, u_point_scale * u_outline_scale * 0.5);
 
-        point_center = convert_CIExy_to_workspace(u_src_primary_g, pos);
+        point_center = convert_CIExy_to_workspace(u_src_primary_g);
+        point_center = float2(pos.x, pos.y) - point_center;
         point_g_weight = draw_point(point_center, u_point_scale * u_outline_scale * 0.5);
 
-        point_center = convert_CIExy_to_workspace(u_src_primary_b, pos);
+        point_center = convert_CIExy_to_workspace(u_src_primary_b);
+        point_center = float2(pos.x, pos.y) - point_center;
         point_b_weight = draw_point(point_center, u_point_scale * u_outline_scale * 0.5);
 
-        point_center = convert_CIExy_to_workspace(u_src_whitepoint, pos);
+        point_center = convert_CIExy_to_workspace(u_src_whitepoint);
+        point_center = float2(pos.x, pos.y) - point_center;
         point_w_weight = draw_point(point_center, u_point_scale * u_outline_scale * 0.5);
 
         // 2.2 draw inset primaries
-        point_center = convert_CIExy_to_workspace(primary_r_inset, pos);
+        point_center = convert_CIExy_to_workspace(primary_r_inset);
+        point_center = float2(pos.x, pos.y) - point_center;
         point_r_weight += draw_torus(
             point_center, u_point_scale, u_point_scale * u_outline_scale
         );
 
-        point_center = convert_CIExy_to_workspace(primary_g_inset, pos);
+        point_center = convert_CIExy_to_workspace(primary_g_inset);
+        point_center = float2(pos.x, pos.y) - point_center;
         point_g_weight += draw_torus(
             point_center, u_point_scale, u_point_scale * u_outline_scale
         );
 
-        point_center = convert_CIExy_to_workspace(primary_b_inset, pos);
+        point_center = convert_CIExy_to_workspace(primary_b_inset);
+        point_center = float2(pos.x, pos.y) - point_center;
         point_b_weight += draw_torus(
             point_center, u_point_scale, u_point_scale * u_outline_scale
         );
 
         point_center = convert_CIExy_to_workspace(
-            dst_whitepoint + u_whitepoint_post_offset * invert, pos
+            dst_whitepoint + u_whitepoint_post_offset * invert
         );
+        point_center = float2(pos.x, pos.y) - point_center;
         point_w_weight += draw_torus(
             point_center, u_point_scale, u_point_scale * u_outline_scale
         );
@@ -195,8 +227,14 @@ kernel InsetPrimariesPlot : ImageComputationKernel<ePixelWise>
         point_r_weight = max(point_r_weight, point_w_weight);
         point_g_weight = max(point_g_weight, point_w_weight);
         point_b_weight = max(point_b_weight, point_w_weight);
-        float alpha = max(max(point_r_weight, point_g_weight), point_b_weight);
+        float point_alpha = max(max(point_r_weight, point_g_weight), point_b_weight);
+        float4 point_color = float4(point_r_weight, point_g_weight, point_b_weight, point_alpha);
 
-        dst() = float4(point_r_weight, point_g_weight, point_b_weight, alpha);
+        float border_alpha = draw_borders(float2(pos.x, pos.y));
+        border_alpha = point_alpha > 0.0? 0.0: border_alpha;
+        float4 border_color = float4(border_alpha, border_alpha, border_alpha, border_alpha);
+        border_color = border_color * 0.1;
+
+        dst() = border_color + point_color;
     }
 };
