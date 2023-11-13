@@ -1,4 +1,4 @@
-// version 5
+// version 6
 kernel InsetPrimariesPlot : ImageComputationKernel<ePixelWise>
 {
     Image<eRead, eAccessPoint, eEdgeClamped> src;
@@ -21,10 +21,13 @@ kernel InsetPrimariesPlot : ImageComputationKernel<ePixelWise>
         float u_point_scale;
         float u_outline_scale;
         float u_margins;
+        bool u_show_spectral_locus;
+        bool u_show_space_borders;
 
     local:
         float pi;
         float2 workspace_scale;
+        float2 spectral_locus[127];
 
     void define(){
         defineParam(u_point_scale, "u_point_scale", 15.0f);
@@ -123,7 +126,20 @@ kernel InsetPrimariesPlot : ImageComputationKernel<ePixelWise>
         return weight;
     }
 
-    float2 convert_CIExy_to_workspace(float2 CIExy, float2 pos){
+    float draw_spectral_locus(float2 pos){
+        // ietrate through the spectral locus dataset to check if each of its
+        // point need to be drawn at the current pos
+        float2 point;
+        float point_alpha;
+        for (int i = 0; i < 127; i++){
+            point = convert_CIExy_to_workspace(spectral_locus[i]);
+            point = float2(pos.x, pos.y) - point;
+            point_alpha = draw_point(point, 3);
+            if (point_alpha > 0.0){return point_alpha;}
+        }
+        return 0.0;
+    }
+
     float2 convert_CIExy_to_workspace(float2 CIExy){
         // CIExy is 0-1 range
         // output in pixel space based on workspace_scale
@@ -138,6 +154,138 @@ kernel InsetPrimariesPlot : ImageComputationKernel<ePixelWise>
             src.bounds.height() - u_margins * 2
         );
         pi = 3.1415926535f;
+        // retrieved using colour library :
+        //   cmfs = colour.colorimetry.MSDS_CMFS_STANDARD_OBSERVER["CIE 1931 2 Degree Standard Observer"]
+        //   xy = colour.XYZ_to_xy(cmfs.values)
+        //   print(xy[::4])
+        spectral_locus[0] = float2(0.17556023, 0.00529384);
+        spectral_locus[1] = float2(0.17523674, 0.00526349);
+        spectral_locus[2] = float2(0.17494519, 0.00522616);
+        spectral_locus[3] = float2(0.17472204, 0.00523752);
+        spectral_locus[4] = float2(0.17440925, 0.00512676);
+        spectral_locus[5] = float2(0.17411223, 0.00496373);
+        spectral_locus[6] = float2(0.17403627, 0.00498596);
+        spectral_locus[7] = float2(0.17388904, 0.00492605);
+        spectral_locus[8] = float2(0.17370535, 0.0049371 );
+        spectral_locus[9] = float2(0.17351445, 0.00489545);
+        spectral_locus[10] = float2(0.17333687, 0.00479674);
+        spectral_locus[11] = float2(0.17310101, 0.00477403);
+        spectral_locus[12] = float2(0.17275115, 0.00479876);
+        spectral_locus[13] = float2(0.1723956,  0.00479612);
+        spectral_locus[14] = float2(0.17198245, 0.00485501);
+        spectral_locus[15] = float2(0.17140743, 0.00510217);
+        spectral_locus[16] = float2(0.17054066, 0.00562097);
+        spectral_locus[17] = float2(0.1695046,  0.00639804);
+        spectral_locus[18] = float2(0.16814615, 0.00749068);
+        spectral_locus[19] = float2(0.16644633, 0.0089644 );
+        spectral_locus[20] = float2(0.16441176, 0.01085756);
+        spectral_locus[21] = float2(0.16185144, 0.01313731);
+        spectral_locus[22] = float2(0.15857311, 0.01601516);
+        spectral_locus[23] = float2(0.15452461, 0.0195557 );
+        spectral_locus[24] = float2(0.14969056, 0.02395033);
+        spectral_locus[25] = float2(0.1439604,  0.02970297);
+        spectral_locus[26] = float2(0.13736376, 0.03740309);
+        spectral_locus[27] = float2(0.12908579, 0.04944981);
+        spectral_locus[28] = float2(0.11870128, 0.06783044);
+        spectral_locus[29] = float2(0.10626074, 0.09448607);
+        spectral_locus[30] = float2(0.09129351, 0.13270204);
+        spectral_locus[31] = float2(0.07343726, 0.18503188);
+        spectral_locus[32] = float2(0.05466652, 0.25409559);
+        spectral_locus[33] = float2(0.03619511, 0.33989993);
+        spectral_locus[34] = float2(0.01970464, 0.43775589);
+        spectral_locus[35] = float2(0.00816803, 0.53842307);
+        spectral_locus[36] = float2(0.00363638, 0.63301138);
+        spectral_locus[37] = float2(0.0079884,  0.71534152);
+        spectral_locus[38] = float2(0.02224421, 0.77962992);
+        spectral_locus[39] = float2(0.04532798, 0.8193908 );
+        spectral_locus[40] = float2(0.07430242, 0.83380309);
+        spectral_locus[41] = float2(0.10602111, 0.82917819);
+        spectral_locus[42] = float2(0.13870235, 0.81477438);
+        spectral_locus[43] = float2(0.1702372,  0.79651854);
+        spectral_locus[44] = float2(0.2003088,  0.77639942);
+        spectral_locus[45] = float2(0.22961967, 0.75432909);
+        spectral_locus[46] = float2(0.25857751, 0.7305066 );
+        spectral_locus[47] = float2(0.28729241, 0.70531627);
+        spectral_locus[48] = float2(0.31591439, 0.67906348);
+        spectral_locus[49] = float2(0.3445132,  0.65202821);
+        spectral_locus[50] = float2(0.37310154, 0.62445086);
+        spectral_locus[51] = float2(0.40162592, 0.59659242);
+        spectral_locus[52] = float2(0.42998863, 0.56864889);
+        spectral_locus[53] = float2(0.45804067, 0.54083663);
+        spectral_locus[54] = float2(0.48561159, 0.51338866);
+        spectral_locus[55] = float2(0.51248637, 0.48659079);
+        spectral_locus[56] = float2(0.53846276, 0.46072525);
+        spectral_locus[57] = float2(0.56326931, 0.43605806);
+        spectral_locus[58] = float2(0.58665019, 0.41275842);
+        spectral_locus[59] = float2(0.60803511, 0.39140915);
+        spectral_locus[60] = float2(0.6270366,  0.37249115);
+        spectral_locus[61] = float2(0.64427296, 0.35533137);
+        spectral_locus[62] = float2(0.65916613, 0.34055323);
+        spectral_locus[63] = float2(0.67185867, 0.32794707);
+        spectral_locus[64] = float2(0.68258157, 0.31724871);
+        spectral_locus[65] = float2(0.69150397, 0.30834226);
+        spectral_locus[66] = float2(0.69894391, 0.30095042);
+        spectral_locus[67] = float2(0.70516285, 0.29477029);
+        spectral_locus[68] = float2(0.71050039, 0.28945294);
+        spectral_locus[69] = float2(0.71511705, 0.28484511);
+        spectral_locus[70] = float2(0.71903294, 0.28093495);
+        spectral_locus[71] = float2(0.72231492, 0.27766187);
+        spectral_locus[72] = float2(0.72491441, 0.27507818);
+        spectral_locus[73] = float2(0.72697497, 0.27302503);
+        spectral_locus[74] = float2(0.72865649, 0.27134351);
+        spectral_locus[75] = float2(0.72996901, 0.27003099);
+        spectral_locus[76] = float2(0.73089625, 0.26910375);
+        spectral_locus[77] = float2(0.73164997, 0.26835003);
+        spectral_locus[78] = float2(0.73229983, 0.26770017);
+        spectral_locus[79] = float2(0.73285865, 0.26714135);
+        spectral_locus[80] = float2(0.73341697, 0.26658303);
+        spectral_locus[81] = float2(0.73393569, 0.26606431);
+        spectral_locus[82] = float2(0.73428645, 0.26571355);
+        spectral_locus[83] = float2(0.73448217, 0.26551783);
+        spectral_locus[84] = float2(0.73462109, 0.26537891);
+        spectral_locus[85] = float2(0.73469002, 0.26530998);
+        spectral_locus[86] = float2(0.73469,    0.26531   );
+        spectral_locus[87] = float2(0.73469,    0.26531   );
+        spectral_locus[88] = float2(0.73469002, 0.26530998);
+        spectral_locus[89] = float2(0.73469002, 0.26530998);
+        spectral_locus[90] = float2(0.73469,    0.26531   );
+        spectral_locus[91] = float2(0.73468996, 0.26531004);
+        spectral_locus[92] = float2(0.73469003, 0.26530997);
+        spectral_locus[93] = float2(0.73468996, 0.26531004);
+        spectral_locus[94] = float2(0.73468999, 0.26531001);
+        spectral_locus[95] = float2(0.73469001, 0.26530999);
+        spectral_locus[96] = float2(0.73468999, 0.26531001);
+        spectral_locus[97] = float2(0.73468999, 0.26531001);
+        spectral_locus[98] = float2(0.73469003, 0.26530997);
+        spectral_locus[99] = float2(0.73468997, 0.26531003);
+        spectral_locus[100] = float2(0.73468995, 0.26531005);
+        spectral_locus[101] = float2(0.73468996, 0.26531004);
+        spectral_locus[102] = float2(0.73469001, 0.26530999);
+        spectral_locus[103] = float2(0.73469001, 0.26530999);
+        spectral_locus[104] = float2(0.73469,    0.26531   );
+        spectral_locus[105] = float2(0.73468998, 0.26531002);
+        spectral_locus[106] = float2(0.73469,    0.26531   );
+        spectral_locus[107] = float2(0.73469,    0.26531   );
+        spectral_locus[108] = float2(0.73469002, 0.26530998);
+        spectral_locus[109] = float2(0.73469007, 0.26530993);
+        spectral_locus[110] = float2(0.73468999, 0.26531001);
+        spectral_locus[111] = float2(0.73468999, 0.26531001);
+        spectral_locus[112] = float2(0.73468999, 0.26531001);
+        spectral_locus[113] = float2(0.73469001, 0.26530999);
+        spectral_locus[114] = float2(0.73468998, 0.26531002);
+        spectral_locus[115] = float2(0.73468998, 0.26531002);
+        spectral_locus[116] = float2(0.73468995, 0.26531005);
+        spectral_locus[117] = float2(0.73469004, 0.26530996);
+        // flat bottom line of the horseshoe, retrieved via manual lerp
+        spectral_locus[118] = float2(0.231473211, 0.031295452);
+        spectral_locus[119] = float2(0.28738619200000004, 0.057297064);
+        spectral_locus[120] = float2(0.343299173, 0.083298676);
+        spectral_locus[121] = float2(0.39921215400000004, 0.10930028800000001);
+        spectral_locus[122] = float2(0.455125135, 0.1353019);
+        spectral_locus[123] = float2(0.511038116, 0.161303512);
+        spectral_locus[124] = float2(0.566951097, 0.18730512400000002);
+        spectral_locus[125] = float2(0.622864078, 0.213306736);
+        spectral_locus[126] = float2(0.6787770590000001, 0.239308348);
     }
 
     void process(int2 pos) {
@@ -230,11 +378,22 @@ kernel InsetPrimariesPlot : ImageComputationKernel<ePixelWise>
         float point_alpha = max(max(point_r_weight, point_g_weight), point_b_weight);
         float4 point_color = float4(point_r_weight, point_g_weight, point_b_weight, point_alpha);
 
-        float border_alpha = draw_borders(float2(pos.x, pos.y));
-        border_alpha = point_alpha > 0.0? 0.0: border_alpha;
-        float4 border_color = float4(border_alpha, border_alpha, border_alpha, border_alpha);
-        border_color = border_color * 0.1;
+        float4 border_color(0.0, 0.0, 0.0, 0.0);
+        if (u_show_space_borders){
+            float border_alpha = draw_borders(float2(pos.x, pos.y));
+            border_alpha = point_alpha > 0.0? 0.0: border_alpha;
+            border_color = float4(border_alpha, border_alpha, border_alpha, border_alpha);
+            border_color = border_color * 0.1;
+        }
 
-        dst() = border_color + point_color;
+        float4 spectral_locus_color(0.0, 0.0, 0.0, 0.0);
+        if (u_show_spectral_locus){
+            float spectral_locus_alpha = draw_spectral_locus(float2(pos.x, pos.y));
+            spectral_locus_color = float4(
+                spectral_locus_alpha, spectral_locus_alpha, spectral_locus_alpha, spectral_locus_alpha
+            );
+            spectral_locus_color = spectral_locus_color * 0.2;
+        }
+        dst() = border_color + spectral_locus_color + point_color;
     }
 };
