@@ -26,9 +26,11 @@ the `build.py` file.
 - copy the first line (kernelSource) and paste into a new file named :
   - `PrimariesInset.blink.src` if it was the Inset blink script
   - `PrimariesPlot.blink.src` if it was the Plot blink script
+  - think to remove the first and trailling quote `'`
 - do the same for the second line (KernelDescription) :
   - `PrimariesInset.blink.desc` if it was the Inset blink script
   - `PrimariesPlot.blink.desc` if it was the Plot blink script
+  - think to remove the first and trailling quote `'`
 - make sure you did it for the 2 blink scripts in the end
 - run `build.py`
 - check result which is `../PrimariesInset.nk` defined by `BuildPaths.build_gizmo` variable (in build.py)
