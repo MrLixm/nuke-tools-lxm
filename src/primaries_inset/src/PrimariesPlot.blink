@@ -1,4 +1,4 @@
-// version 6
+// version 7
 kernel InsetPrimariesPlot : ImageComputationKernel<ePixelWise>
 {
     Image<eRead, eAccessPoint, eEdgeClamped> src;
@@ -22,12 +22,14 @@ kernel InsetPrimariesPlot : ImageComputationKernel<ePixelWise>
         float u_outline_scale;
         float u_margins;
         bool u_show_spectral_locus;
+        bool u_show_daylight_locus;
         bool u_show_space_borders;
 
     local:
         float pi;
         float2 workspace_scale;
         float2 spectral_locus[127];
+        float2 daylight_locus[105];
 
     void define(){
         defineParam(u_point_scale, "u_point_scale", 15.0f);
@@ -127,7 +129,7 @@ kernel InsetPrimariesPlot : ImageComputationKernel<ePixelWise>
     }
 
     float draw_spectral_locus(float2 pos){
-        // ietrate through the spectral locus dataset to check if each of its
+        // iterate through the spectral locus dataset to check if each of its
         // point need to be drawn at the current pos
         float2 point;
         float point_alpha;
@@ -135,7 +137,25 @@ kernel InsetPrimariesPlot : ImageComputationKernel<ePixelWise>
             point = convert_CIExy_to_workspace(spectral_locus[i]);
             point = float2(pos.x, pos.y) - point;
             point_alpha = draw_point(point, 3);
-            if (point_alpha > 0.0){return point_alpha;}
+            if (point_alpha > 0.0){
+                return point_alpha;
+            }
+        }
+        return 0.0;
+    }
+
+    float draw_daylight_locus(float2 pos){
+        // iterate through the daylight locus dataset to check if each of its
+        // point need to be drawn at the current pos
+        float2 point;
+        float point_alpha;
+        for (int i = 0; i < 105; i++){
+            point = convert_CIExy_to_workspace(daylight_locus[i]);
+            point = float2(pos.x, pos.y) - point;
+            point_alpha = draw_point(point, 3);
+            if (point_alpha > 0.0){
+                return point_alpha;
+            }
         }
         return 0.0;
     }
@@ -286,6 +306,117 @@ kernel InsetPrimariesPlot : ImageComputationKernel<ePixelWise>
         spectral_locus[124] = float2(0.566951097, 0.18730512400000002);
         spectral_locus[125] = float2(0.622864078, 0.213306736);
         spectral_locus[126] = float2(0.6787770590000001, 0.239308348);
+
+        // retrieved from colour library:
+        //      CCT = numpy.arange(4000, 25000, 200) * 1.4388 / 1.4380
+        //      print(f"x{len(CCT)} CCTs: max={max(CCT)}; min={min(CCT)}")
+        //      loc = colour.temperature.CCT_to_xy_CIE_D(CCT)
+        //      print(loc.reshape([-1, 2]))
+        daylight_locus[0] = float2(0.38224364, 0.38370865);
+        daylight_locus[1] = float2(0.37362395, 0.37851617);
+        daylight_locus[2] = float2(0.36570774, 0.37335476);
+        daylight_locus[3] = float2(0.35844396, 0.36828795);
+        daylight_locus[4] = float2(0.35177882, 0.3633602 );
+        daylight_locus[5] = float2(0.34565945, 0.35860125);
+        daylight_locus[6] = float2(0.34003569, 0.35402962);
+        daylight_locus[7] = float2(0.33486105, 0.34965545);
+        daylight_locus[8] = float2(0.330093,   0.34548275);
+        daylight_locus[9] = float2(0.32569299, 0.34151111);
+        daylight_locus[10] = float2(0.32162624, 0.337737  );
+        daylight_locus[11] = float2(0.31786152, 0.33415473);
+        daylight_locus[12] = float2(0.31437082, 0.33075721);
+        daylight_locus[13] = float2(0.31112903, 0.3275365 );
+        daylight_locus[14] = float2(0.30811368, 0.32448414);
+        daylight_locus[15] = float2(0.30530391, 0.32159079);
+        daylight_locus[16] = float2(0.30267173, 0.31883734);
+        daylight_locus[17] = float2(0.30021269, 0.31622744);
+        daylight_locus[18] = float2(0.29791133, 0.31375204);
+        daylight_locus[19] = float2(0.29575391, 0.3114026 );
+        daylight_locus[20] = float2(0.29372817, 0.30917114);
+        daylight_locus[21] = float2(0.29182314, 0.30705018);
+        daylight_locus[22] = float2(0.29002899, 0.30503275);
+        daylight_locus[23] = float2(0.28833688, 0.30311237);
+        daylight_locus[24] = float2(0.28673885, 0.30128299);
+        daylight_locus[25] = float2(0.28522772, 0.299539  );
+        daylight_locus[26] = float2(0.283797,   0.29787518);
+        daylight_locus[27] = float2(0.28244078, 0.29628666);
+        daylight_locus[28] = float2(0.28115373, 0.29476894);
+        daylight_locus[29] = float2(0.27993096, 0.29331783);
+        daylight_locus[30] = float2(0.27876804, 0.29192942);
+        daylight_locus[31] = float2(0.27766092, 0.29060008);
+        daylight_locus[32] = float2(0.27660588, 0.28932643);
+        daylight_locus[33] = float2(0.27559952, 0.28810534);
+        daylight_locus[34] = float2(0.27463873, 0.28693386);
+        daylight_locus[35] = float2(0.27372063, 0.28580926);
+        daylight_locus[36] = float2(0.27284259, 0.28472899);
+        daylight_locus[37] = float2(0.27200216, 0.28369068);
+        daylight_locus[38] = float2(0.27119711, 0.28269208);
+        daylight_locus[39] = float2(0.27042535, 0.28173114);
+        daylight_locus[40] = float2(0.26968495, 0.28080589);
+        daylight_locus[41] = float2(0.26897414, 0.27991452);
+        daylight_locus[42] = float2(0.26829127, 0.27905532);
+        daylight_locus[43] = float2(0.26763478, 0.27822669);
+        daylight_locus[44] = float2(0.26700326, 0.27742713);
+        daylight_locus[45] = float2(0.26639536, 0.27665522);
+        daylight_locus[46] = float2(0.26580985, 0.27590964);
+        daylight_locus[47] = float2(0.26524557, 0.27518915);
+        daylight_locus[48] = float2(0.26470143, 0.27449257);
+        daylight_locus[49] = float2(0.26417643, 0.2738188 );
+        daylight_locus[50] = float2(0.26366961, 0.27316679);
+        daylight_locus[51] = float2(0.26318009, 0.27253558);
+        daylight_locus[52] = float2(0.26270703, 0.27192422);
+        daylight_locus[53] = float2(0.26224965, 0.27133186);
+        daylight_locus[54] = float2(0.26180722, 0.27075766);
+        daylight_locus[55] = float2(0.26137904, 0.27020084);
+        daylight_locus[56] = float2(0.26096447, 0.26966067);
+        daylight_locus[57] = float2(0.2605629,  0.26913644);
+        daylight_locus[58] = float2(0.26017374, 0.2686275 );
+        daylight_locus[59] = float2(0.25979645, 0.26813322);
+        daylight_locus[60] = float2(0.25943052, 0.26765301);
+        daylight_locus[61] = float2(0.25907546, 0.26718629);
+        daylight_locus[62] = float2(0.25873082, 0.26673254);
+        daylight_locus[63] = float2(0.25839616, 0.26629125);
+        daylight_locus[64] = float2(0.25807107, 0.26586194);
+        daylight_locus[65] = float2(0.25775515, 0.26544413);
+        daylight_locus[66] = float2(0.25744805, 0.26503741);
+        daylight_locus[67] = float2(0.25714941, 0.26464135);
+        daylight_locus[68] = float2(0.2568589,  0.26425556);
+        daylight_locus[69] = float2(0.2565762,  0.26387965);
+        daylight_locus[70] = float2(0.25630101, 0.26351328);
+        daylight_locus[71] = float2(0.25603305, 0.26315609);
+        daylight_locus[72] = float2(0.25577205, 0.26280776);
+        daylight_locus[73] = float2(0.25551775, 0.26246798);
+        daylight_locus[74] = float2(0.2552699,  0.26213645);
+        daylight_locus[75] = float2(0.25502828, 0.26181289);
+        daylight_locus[76] = float2(0.25479264, 0.26149701);
+        daylight_locus[77] = float2(0.25456279, 0.26118857);
+        daylight_locus[78] = float2(0.25433852, 0.26088731);
+        daylight_locus[79] = float2(0.25411964, 0.26059299);
+        daylight_locus[80] = float2(0.25390595, 0.26030539);
+        daylight_locus[81] = float2(0.25369729, 0.26002428);
+        daylight_locus[82] = float2(0.25349348, 0.25974946);
+        daylight_locus[83] = float2(0.25329437, 0.25948072);
+        daylight_locus[84] = float2(0.25309979, 0.25921788);
+        daylight_locus[85] = float2(0.2529096,  0.25896075);
+        daylight_locus[86] = float2(0.25272365, 0.25870915);
+        daylight_locus[87] = float2(0.25254182, 0.25846291);
+        daylight_locus[88] = float2(0.25236396, 0.25822186);
+        daylight_locus[89] = float2(0.25218996, 0.25798586);
+        daylight_locus[90] = float2(0.25201969, 0.25775474);
+        daylight_locus[91] = float2(0.25185304, 0.25752837);
+        daylight_locus[92] = float2(0.2516899,  0.25730659);
+        daylight_locus[93] = float2(0.25153016, 0.25708929);
+        daylight_locus[94] = float2(0.25137372, 0.25687633);
+        daylight_locus[95] = float2(0.25122048, 0.25666758);
+        daylight_locus[96] = float2(0.25107034, 0.25646293);
+        daylight_locus[97] = float2(0.25092322, 0.25626226);
+        daylight_locus[98] = float2(0.25077903, 0.25606545);
+        daylight_locus[99] = float2(0.25063769, 0.25587241);
+        daylight_locus[100] = float2(0.2504991,  0.25568302);
+        daylight_locus[101] = float2(0.2503632,  0.25549719);
+        daylight_locus[102] = float2(0.25022991, 0.25531482);
+        daylight_locus[103] = float2(0.25009916, 0.25513583);
+        daylight_locus[104] = float2(0.24997088, 0.2549601 );
     }
 
     void process(int2 pos) {
@@ -394,6 +525,17 @@ kernel InsetPrimariesPlot : ImageComputationKernel<ePixelWise>
             );
             spectral_locus_color = spectral_locus_color * 0.2;
         }
-        dst() = border_color + spectral_locus_color + point_color;
+
+        float4 daylight_locus_color = float4(0.0, 0.0, 0.0, 0.0);
+        if (u_show_daylight_locus){
+            float daylight_locus_alpha = draw_daylight_locus(float2(pos.x, pos.y));
+            daylight_locus_color = float4(0.5, 0.3, 0.2, 1.0) * daylight_locus_alpha;
+        }
+        dst() = (
+            border_color +
+            spectral_locus_color +
+            daylight_locus_color +
+            point_color
+        );
     }
 };
