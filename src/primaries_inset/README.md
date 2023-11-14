@@ -13,6 +13,11 @@ was also [ported to darktable](https://github.com/darktable-org/darktable/pull/1
 
 ![demo recording of the node utilisation in Nuke](doc/img/demo.mp4)
 
+
+https://github.com/MrLixm/Foundry_Nuke/assets/64362465/28cbaf81-8e51-4d37-89c4-bf9e7d2cf1e7
+
+
+
 | enabled                                                                  | disabled                                                                    |
 |--------------------------------------------------------------------------|-----------------------------------------------------------------------------|
 | ![nuke screenshot with PrimariesInset enable](doc/img/demo-inset-on.png) | ![nuke screenshot with PrimariesInset disabled](doc/img/demo-inset-off.png) |
