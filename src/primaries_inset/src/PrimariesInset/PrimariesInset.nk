@@ -42,6 +42,11 @@ Group {
  point_outline_scale 0.75
  addUserKnob {7 plot_margins l "margins" R 0 500}
  plot_margins 150
+ addUserKnob {6 plot_show_spectral_locus l "show spectral locus" +STARTLINE}
+ plot_show_spectral_locus 1
+ addUserKnob {6 plot_show_daylight_locus l "show daylight locus" +STARTLINE}
+ plot_show_daylight_locus 1
+ addUserKnob {6 plot_show_space_borders l "show CIExy limits" +STARTLINE}
  addUserKnob {20 _Private}
  addUserKnob {7 inset_r}
  inset_r {{"min(u_inset_r + inset, 1)"}}
@@ -51,7 +56,7 @@ Group {
  inset_b {{"min(u_inset_b + inset, 1)"}}
  addUserKnob {20 About}
  addUserKnob {26 toolName l name T PrimariesInset}
- addUserKnob {26 toolVersion l version T 0.5.1}
+ addUserKnob {26 toolVersion l version T 0.6.0}
  addUserKnob {26 toolAuthor l author T "<a style=\"color: rgb(200,200,200);\" href=\"https://mrlixm.github.io/\">Liam Collod</a>"}
  addUserKnob {26 toolDescription l description T "Reshape a colorspace gamut and plot it on the CIE xy space."}
  addUserKnob {26 toolUrl l url T "<a style=\"color: rgb(200,200,200);\" href=\"https://github.com/MrLixm/Foundry_Nuke\">https://github.com/MrLixm/Foundry_Nuke</a>"}
@@ -110,6 +115,9 @@ Group {
    InsetPrimariesPlot_u_point_scale {{parent.point_size}}
    InsetPrimariesPlot_u_outline_scale {{parent.point_outline_scale}}
    InsetPrimariesPlot_u_margins {{parent.plot_margins}}
+   InsetPrimariesPlot_u_show_spectral_locus {{parent.plot_show_spectral_locus}}
+   InsetPrimariesPlot_u_show_daylight_locus {{parent.plot_show_daylight_locus}}
+   InsetPrimariesPlot_u_show_space_borders {{parent.plot_show_space_borders}}
    format "2048 2048 0 0 2048 2048 1 square_2K"
    rebuild_finalise ""
    name InsetPlotBlink
