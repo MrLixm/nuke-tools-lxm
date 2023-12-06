@@ -1,0 +1,22 @@
+Dot {
+ name Dot_%PASS_ID%_1
+ xpos %PASS_XPOS%
+ ypos 0
+}
+Crop {
+ name Crop_%PASS_ID%_1
+ xpos %PASS_XPOS%
+ ypos 50
+ box {%BOX_X% %BOX_Y% %BOX_R% %BOX_T%}
+ reformat true
+}
+ModifyMetadata {
+ name ModifyMetadata_%PASS_ID%_1
+ xpos %PASS_XPOS%
+ ypos 100
+ metadata {{set %METADATA_KEY% %PASS_ID%}}
+}
+clone $%WRITE_CLONE_ID% {
+ xpos %PASS_XPOS%
+ ypos 150
+}
