@@ -10,8 +10,8 @@ Crop {
  box {%BOX_X% %BOX_Y% %BOX_R% %BOX_T%}
  reformat true
 }
-ModifyMetadata {
- name ModifyMetadata_%PASS_ID%_1
+ModifyMetaData {
+ name ModifyMetaData_%PASS_ID%_1
  xpos %PASS_XPOS%
  ypos 100
  metadata {{set %METADATA_KEY% %PASS_ID%}}

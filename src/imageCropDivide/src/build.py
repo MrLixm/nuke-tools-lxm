@@ -11,6 +11,9 @@ class BuildPaths:
     src_btn_script = THIS_DIR / "btn-script-template.py"
     assert src_btn_script.exists()
 
+    src_combine_script = THIS_DIR / "combine-script.py"
+    assert src_combine_script.exists()
+
     src_gizmo = THIS_DIR / "ImageCropDivide-template.nk"
     assert src_gizmo.exists()
 
@@ -57,10 +60,15 @@ def build_python_script() -> str:
     return sanitize_nuke_script(base_script)
 
 
+def build_combine_script():
+    return sanitize_nuke_script(BuildPaths.src_combine_script.read_text("utf-8"))
+
+
 def build():
     LOGGER.info(f"build started")
     base_gizmo = BuildPaths.src_gizmo.read_text("utf-8")
     btn_py_script = build_python_script()
+    combine_py_script = build_combine_script()
 
     new_gizmo = []
 
@@ -68,6 +76,9 @@ def build():
         if "%ICD_SCRIPT%" in line:
             line = line.replace("%ICD_SCRIPT%", btn_py_script)
             LOGGER.debug(f"replaced ICD_SCRIPT")
+        if "%COMBINE_SCRIPT%" in line:
+            line = line.replace("%COMBINE_SCRIPT%", combine_py_script)
+            LOGGER.debug(f"replaced COMBINE_SCRIPT")
 
         new_gizmo.append(line)
 

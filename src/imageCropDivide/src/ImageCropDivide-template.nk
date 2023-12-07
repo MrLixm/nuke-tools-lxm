@@ -2,20 +2,32 @@ Group {
  name imageCropDivide
  tile_color 0x5c3d84ff
  addUserKnob {20 User}
- addUserKnob {3 width_max}
+ addUserKnob {26 header_step1 l " " T "<h2>Step1</h2>"}
+ addUserKnob {3 width_max l "Width Max"}
  width_max 1920
- addUserKnob {3 height_max -STARTLINE}
+ addUserKnob {3 height_max l "Height Max" -STARTLINE}
  height_max 1080
- addUserKnob {3 width_source}
+ addUserKnob {3 width_source l "Width Source"}
  width_source {{width}}
- addUserKnob {3 height_source -STARTLINE}
+ addUserKnob {3 height_source l "Height Source" -STARTLINE}
  height_source {{height}}
+ addUserKnob {2 export_directory l "Export Directory" +STARTLINE}
+ addUserKnob {1 combined_filename l "Combined File Name" t "without file extension" +STARTLINE}
  addUserKnob {26 "" +STARTLINE}
+ addUserKnob {26 header_step2 l " " T "<h2>Step2</h2>"}
  addUserKnob {22 icd_script l "Copy Setup to ClipBoard" T "%ICD_SCRIPT%" +STARTLINE}
- addUserKnob {26 info l " " T "press ctrl+v in the nodegraph after clicking the above button"}
+ addUserKnob {26 info l " " T "press ctrl+v in the nodegraph after clicking the above button\nyou can then edit the top-most write node and\nunclone all the other write node once done."}
+ addUserKnob {26 "" +STARTLINE}
+ addUserKnob {26 header_step3 l " " T "<h2>Step3</h2>"}
+ addUserKnob {26 desc_step3 l " " T "- render all write node to disk\n- then click the under:"}
+ addUserKnob {22 combine_script l "Combine From Export Directory" T "%COMBINE_SCRIPT%" +STARTLINE}
+ addUserKnob {6 delete_crops l "Delete Crops" t "Delete crops files created once the combined image is finished." +STARTLINE}
+ addUserKnob {26 "" +STARTLINE}
+ addUserKnob {26 header_combine l " " T "<h2>Combine Settings</h2>"}
+ addUserKnob {2 oiiotool_path l "oiiotool path" +STARTLINE}
  addUserKnob {20 About}
  addUserKnob {26 toolName l name T ImageCropDivide}
- addUserKnob {26 toolVersion l version T 0.8.0}
+ addUserKnob {26 toolVersion l version T 0.9.0}
  addUserKnob {26 toolAuthor l author T "<a style=\"color: rgb(200,200,200);\" href=\"https://mrlixm.github.io/\">Liam Collod</a>"}
  addUserKnob {26 toolDescription l description T "Reshape a colorspace gamut and plot it on the CIE xy space."}
  addUserKnob {26 toolUrl l url T "<a style=\"color: rgb(200,200,200);\" href=\"https://github.com/MrLixm/Foundry_Nuke\">https://github.com/MrLixm/Foundry_Nuke</a>"}

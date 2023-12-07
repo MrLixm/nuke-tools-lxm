@@ -1,7 +1,7 @@
 Write {
  xpos 0
  ypos -100
- file "[metadata %METADATA_KEY%].jpg"
+ file "[value %ICD_NODE%.export_directory]/[metadata %METADATA_KEY%].jpg"
  file_type jpeg
  _jpeg_quality 1
  _jpeg_sub_sampling 4:4:4

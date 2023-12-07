@@ -111,24 +111,30 @@ def generate_crop_coordinates(width_max, height_max, width_source, height_source
         end = height_source / height_crops_n * i + (height_source / height_crops_n)
         height_crops.append((start, end))
 
+    # nuke assume 0,0 is bottom left but we want 0,0 to be top-left
+    height_crops.reverse()
+
+    # XXX: we round all decimals to the above integer to avoid "black stripe" when
+    #   combining the image because there is some missing pixels
+
     crops = []
 
-    # ORDER matter we are trying to get :
-    # [0] > [1] >
-    # [2] > [3] > ...
-    # that is expected by oiiotool
-    # https://openimageio.readthedocs.io/en/latest/oiiotool.html#cmdoption-mosaic
-    for height_i in range(len(height_crops)):
-        for width_i in range(len(width_crops)):
+    for width_i, width in enumerate(width_crops):
+        for height_i, height in enumerate(height_crops):
             crop = CropCoordinate(
-                x_start=width_crops[width_i][0],
-                y_start=height_crops[height_i][0],
-                x_end=width_crops[width_i][1],
-                y_end=height_crops[height_i][1],
-                width_index=width_i,
-                height_index=height_i,
+                x_start=math.ceil(width[0]),
+                y_start=math.ceil(height[0]),
+                x_end=math.ceil(width[1]),
+                y_end=math.ceil(height[1]),
+                # XXX: indexes start at 1
+                width_index=width_i + 1,
+                height_index=height_i + 1,
             )
             crops.append(crop)
+
+    # a 2x2 image is indexed like
+    # [1 3]
+    # [2 4]
 
     return crops
 
@@ -156,6 +162,7 @@ def generate_nk(
     height_max,
     width_source,
     height_source,
+    node_name,
 ):
     """
 
@@ -164,6 +171,7 @@ def generate_nk(
         height_max(int):
         width_source(int):
         height_source(int):
+        node_name(str):
 
     Returns:
         str: .nk formatted string representing the nodegraph
@@ -184,6 +192,7 @@ def generate_nk(
     master_write = WRITE_MASTER_NUKE_TEMPLATE.replace(
         "%METADATA_KEY%", pass_metadata_key
     )
+    master_write = master_write.replace("%ICD_NODE%", node_name)
     out += "clone node7f6100171d00|Write|21972 {}\n".format(master_write)
     out += "set {} [stack 0]\n".format(master_write_id)
 
@@ -223,6 +232,7 @@ def run():
     height_max = nuke.thisNode()["height_max"].getValue()
     width_source = nuke.thisNode()["width_source"].getValue()
     height_source = nuke.thisNode()["height_source"].getValue()
+    node_name = nuke.thisNode().name()
 
     _check(width_max, "width_max")
     _check(height_max, "height_max")
@@ -234,6 +244,7 @@ def run():
         height_max=height_max,
         width_source=width_source,
         height_source=height_source,
+        node_name=node_name,
     )
     register_in_clipboard(nk_str)
 
@@ -245,5 +256,6 @@ def run():
 logging.basicConfig(
     level=logging.INFO,
     format="%(levelname)-7s | %(asctime)s [%(name)s] %(message)s",
+    stream=sys.stdout,
 )
 run()
