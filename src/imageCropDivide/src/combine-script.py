@@ -20,7 +20,7 @@ class BaseCombineMethod:
     def run(
         self,
         directory,
-        combined_filename,
+        combined_filepath,
         delete_crops,
         target_width,
         target_height,
@@ -29,7 +29,7 @@ class BaseCombineMethod:
 
         Args:
             directory(str): filesystem path to an existing directory with file inside
-            combined_filename(str): valid filesystem file name without extension
+            combined_filepath(str): valid filesystem file name without extension
             delete_crops(bool): True to delete crops once combined
             target_width(int): taregt width of the combined image
             target_height(int): taregt height of the combined image
@@ -132,7 +132,7 @@ class OiiotoolCombineMethod(BaseCombineMethod):
     def run(
         self,
         directory,
-        combined_filename,
+        combined_filepath,
         delete_crops,
         target_width,
         target_height,
@@ -144,7 +144,7 @@ class OiiotoolCombineMethod(BaseCombineMethod):
                 "Cannot find crops files to combine in {}".format(directory)
             )
 
-        dst_file = os.path.join(directory, "{}{}".format(combined_filename, src_ext))
+        dst_file = combined_filepath + src_ext
 
         src_files = sort_crops_paths_topleft_rowcolumn(src_files)
         tiles_size = get_grid_size(src_files)
@@ -187,7 +187,7 @@ class PillowCombineMethod(BaseCombineMethod):
     def run(
         self,
         directory,
-        combined_filename,
+        combined_filepath,
         delete_crops,
         target_width,
         target_height,
@@ -199,7 +199,7 @@ class PillowCombineMethod(BaseCombineMethod):
         column_number, row_number = get_grid_size(src_files)
 
         src_ext = os.path.splitext(src_files[0])[1]
-        dst_file = os.path.join(directory, "{}{}".format(combined_filename, src_ext))
+        dst_file = combined_filepath + src_ext
 
         images = [Image.open(filepath) for filepath in src_files]
         # XXX: assume all crops have the same size
@@ -250,7 +250,7 @@ def run():
     LOGGER.info("[run] Started.")
 
     export_dir = nuke.thisNode()["export_directory"].evaluate()  # type: str
-    combined_filename = nuke.thisNode()["combined_filename"].evaluate()  # type: str
+    combined_filepath = nuke.thisNode()["combined_filepath"].evaluate()  # type: str
     delete_crops = nuke.thisNode()["delete_crops"].getValue()  # type: bool
     oiiotool_path = nuke.thisNode()["oiiotool_path"].evaluate()  # type: str
     width_source = int(nuke.thisNode()["width_source"].getValue())  # type: int
@@ -280,7 +280,7 @@ def run():
     combined_filepath = combine_instance.run(
         directory=export_dir,
         delete_crops=delete_crops,
-        combined_filename=combined_filename,
+        combined_filepath=combined_filepath,
         target_width=width_source,
         target_height=height_source,
     )
