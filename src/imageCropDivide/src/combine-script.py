@@ -17,13 +17,22 @@ class BaseCombineMethod:
             raise NotImplementedError("name attribute must be implemented")
 
     @abc.abstractmethod
-    def run(self, directory, combined_filename, delete_crops):
+    def run(
+        self,
+        directory,
+        combined_filename,
+        delete_crops,
+        target_width,
+        target_height,
+    ):
         """
 
         Args:
             directory(str): filesystem path to an existing directory with file inside
             combined_filename(str): valid filesystem file name without extension
             delete_crops(bool): True to delete crops once combined
+            target_width(int): taregt width of the combined image
+            target_height(int): taregt height of the combined image
 
         Returns:
             str: filesystem path to the combined file created
@@ -48,7 +57,14 @@ class OiiotoolCombineMethod(BaseCombineMethod):
                 "Oiiotool path provide doesn't exist: {}".format(oiiotool_path)
             )
 
-    def run(self, directory, combined_filename, delete_crops):
+    def run(
+        self,
+        directory,
+        combined_filename,
+        delete_crops,
+        target_width,
+        target_height,
+    ):
         # XXX: we assume directory only contains the images we want to combine but
         #   we still perform some sanity checks just in case
         src_files = [
@@ -76,17 +92,20 @@ class OiiotoolCombineMethod(BaseCombineMethod):
         # [1 4] > [1 2]
         # [2 5] > [3 4]
         # [3 6] > [5 6]
-        print([os.path.basename(p) for p in src_files])
         buffer = []
         for row_index in range(mosaic_max_height):
             buffer += src_files[row_index::mosaic_max_height]
         src_files = buffer
-        print([os.path.basename(p) for p in src_files])
 
         command = [self._oiiotool_path]
         command += src_files
         # https://openimageio.readthedocs.io/en/latest/oiiotool.html#cmdoption-mosaic
+        # XXX: needed so hack explained under works
+        command += ["--metamerge"]
         command += ["--mosaic", mosaic_max]
+        command += ["--cut", "0,0,{},{}".format(target_width - 1, target_height - 1)]
+        # XXX: hack to preserve metadata that is lost with the mosaic operation
+        command += ["-i", src_files[0], "--chappend"]
         command += ["-o", dst_file]
 
         LOGGER.info("about to call oiiotool with {}".format(command))
@@ -112,7 +131,14 @@ class PillowCombineMethod(BaseCombineMethod):
         super(PillowCombineMethod, self).__init__()
         import Pillow
 
-    def run(self, directory, combined_filename, delete_crops):
+    def run(
+        self,
+        directory,
+        combined_filename,
+        delete_crops,
+        target_width,
+        target_height,
+    ):
         # TODO
         raise NotImplementedError()
 
@@ -130,6 +156,8 @@ def run():
     combined_filename = nuke.thisNode()["combined_filename"].getValue()  # type: str
     delete_crops = nuke.thisNode()["delete_crops"].getValue()  # type: bool
     oiiotool_path = nuke.thisNode()["oiiotool_path"].getValue()  # type: str
+    width_source = int(nuke.thisNode()["width_source"].getValue())  # type: int
+    height_source = int(nuke.thisNode()["height_source"].getValue())  # type: int
 
     if not export_dir or not os.path.isdir(export_dir):
         raise ValueError(
@@ -156,6 +184,8 @@ def run():
         directory=export_dir,
         delete_crops=delete_crops,
         combined_filename=combined_filename,
+        target_width=width_source,
+        target_height=height_source,
     )
     nuke.message("Successfully created combine file: {}".format(combined_filepath))
     LOGGER.info("[run] Finished.")

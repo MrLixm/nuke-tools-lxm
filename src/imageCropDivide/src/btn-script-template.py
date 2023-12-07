@@ -71,6 +71,12 @@ class CropCoordinate:
 
 def generate_crop_coordinates(width_max, height_max, width_source, height_source):
     """
+    Split the guven source coordinates area into multiple crops which are all tiles
+    of the same size but which can have width!=height.
+
+    This implies that the combination of the crop might be better than the source area
+    and need to be cropped.
+
     Args:
         width_max (int): maximum allowed width for each crop
         height_max (int): maximum allowed height for each crop
@@ -80,8 +86,12 @@ def generate_crop_coordinates(width_max, height_max, width_source, height_source
     Returns:
         list[CropCoordinate]: list of crops to perform to match the given parameters requested
     """
+    # ceil to get the biggest number of crops
     width_crops_n = math.ceil(width_source / width_max)
     height_crops_n = math.ceil(height_source / height_max)
+    # floor to get maximal crop dimension
+    width_crop = math.ceil(width_source / width_crops_n)
+    height_crop = math.ceil(height_source / height_crops_n)
 
     if not width_crops_n or not height_crops_n:
         raise RuntimeError(
@@ -100,32 +110,29 @@ def generate_crop_coordinates(width_max, height_max, width_source, height_source
     width_crops = []
 
     for i in range(width_crops_n):
-        start = width_source / width_crops_n * i
-        end = width_source / width_crops_n * i + (width_source / width_crops_n)
+        start = width_crop * i
+        end = width_crop * i + width_crop
         width_crops.append((start, end))
 
     height_crops = []
 
     for i in range(height_crops_n):
-        start = height_source / height_crops_n * i
-        end = height_source / height_crops_n * i + (height_source / height_crops_n)
+        start = height_crop * i
+        end = height_crop * i + height_crop
         height_crops.append((start, end))
 
     # nuke assume 0,0 is bottom left but we want 0,0 to be top-left
     height_crops.reverse()
-
-    # XXX: we round all decimals to the above integer to avoid "black stripe" when
-    #   combining the image because there is some missing pixels
 
     crops = []
 
     for width_i, width in enumerate(width_crops):
         for height_i, height in enumerate(height_crops):
             crop = CropCoordinate(
-                x_start=math.ceil(width[0]),
-                y_start=math.ceil(height[0]),
-                x_end=math.ceil(width[1]),
-                y_end=math.ceil(height[1]),
+                x_start=width[0],
+                y_start=height[0],
+                x_end=width[1],
+                y_end=height[1],
                 # XXX: indexes start at 1
                 width_index=width_i + 1,
                 height_index=height_i + 1,
