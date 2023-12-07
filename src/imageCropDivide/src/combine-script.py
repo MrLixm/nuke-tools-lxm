@@ -40,6 +40,78 @@ class BaseCombineMethod:
         pass
 
 
+def find_crop_images_in_dir(directory):
+    """
+    Args:
+        directory(str): filesystem path to an existing directory with file inside
+
+    Returns:
+        list[str]: list of existing files
+    """
+    # XXX: we assume directory only contains the images we want to combine but
+    #   we still perform some sanity checks just in case
+    src_files = [
+        os.path.join(directory, filename) for filename in os.listdir(directory)
+    ]
+    src_ext = os.path.splitext(src_files[0])[1]
+    src_files = [
+        filepath
+        for filepath in src_files
+        if os.path.isfile(filepath) and filepath.endswith(src_ext)
+    ]
+    return src_files
+
+
+def sort_crops_paths_topleft_rowcolumn(crop_paths):
+    """
+    Change the order of the given list of images so it correspond to a list of crop
+    starting from the top-left, doing rows then columns.
+
+    Example for a 2x3 image::
+
+        [1 2]
+        [3 4]
+        [5 6]
+
+    Args:
+        crop_paths: list of file paths exported by the ICD node.
+
+    Returns:
+        new list of same file paths but sorted differently.
+    """
+
+    # copy
+    _crop_paths = list(crop_paths)
+    _crop_paths.sort()
+
+    _, mosaic_max_height = get_grid_size(crop_paths)
+
+    # for a 2x3 image we need to convert like :
+    # [1 4] > [1 2]
+    # [2 5] > [3 4]
+    # [3 6] > [5 6]
+    buffer = []
+    for row_index in range(mosaic_max_height):
+        buffer += _crop_paths[row_index::mosaic_max_height]
+
+    return buffer
+
+
+def get_grid_size(crop_paths):
+    """
+    Returns:
+        tuple[int, int]: (columns number, rows number).
+    """
+    # copy
+    _crop_paths = list(crop_paths)
+    _crop_paths.sort()
+    # name of a file is like "0x2.jpg"
+    mosaic_max = os.path.splitext(os.path.basename(_crop_paths[-1]))[0]
+    mosaic_max_width = int(mosaic_max.split("x")[0])
+    mosaic_max_height = int(mosaic_max.split("x")[1])
+    return mosaic_max_width, mosaic_max_height
+
+
 class OiiotoolCombineMethod(BaseCombineMethod):
     name = "oiiotool executable"
 
@@ -65,17 +137,8 @@ class OiiotoolCombineMethod(BaseCombineMethod):
         target_width,
         target_height,
     ):
-        # XXX: we assume directory only contains the images we want to combine but
-        #   we still perform some sanity checks just in case
-        src_files = [
-            os.path.join(directory, filename) for filename in os.listdir(directory)
-        ]
+        src_files = find_crop_images_in_dir(directory)
         src_ext = os.path.splitext(src_files[0])[1]
-        src_files = [
-            filepath
-            for filepath in src_files
-            if os.path.isfile(filepath) and filepath.endswith(src_ext)
-        ]
         if not src_files:
             raise ValueError(
                 "Cannot find crops files to combine in {}".format(directory)
@@ -83,26 +146,15 @@ class OiiotoolCombineMethod(BaseCombineMethod):
 
         dst_file = os.path.join(directory, "{}{}".format(combined_filename, src_ext))
 
-        src_files.sort()
-        # name of a file is like "0x2.jpg"
-        mosaic_max = os.path.splitext(os.path.basename(src_files[-1]))[0]
-        mosaic_max_height = int(mosaic_max.split("x")[1])
-
-        # order of source files matter, for a 2x3 image we need to convert like :
-        # [1 4] > [1 2]
-        # [2 5] > [3 4]
-        # [3 6] > [5 6]
-        buffer = []
-        for row_index in range(mosaic_max_height):
-            buffer += src_files[row_index::mosaic_max_height]
-        src_files = buffer
+        src_files = sort_crops_paths_topleft_rowcolumn(src_files)
+        tiles_size = get_grid_size(src_files)
 
         command = [self._oiiotool_path]
         command += src_files
         # https://openimageio.readthedocs.io/en/latest/oiiotool.html#cmdoption-mosaic
         # XXX: needed so hack explained under works
         command += ["--metamerge"]
-        command += ["--mosaic", mosaic_max]
+        command += ["--mosaic", "{}x{}".format(tiles_size[0], tiles_size[1])]
         command += ["--cut", "0,0,{},{}".format(target_width - 1, target_height - 1)]
         # XXX: hack to preserve metadata that is lost with the mosaic operation
         command += ["-i", src_files[0], "--chappend"]
@@ -129,7 +181,8 @@ class PillowCombineMethod(BaseCombineMethod):
 
     def __init__(self, *args, **kwargs):
         super(PillowCombineMethod, self).__init__()
-        import Pillow
+        # expected to raise if PIL not available
+        from PIL import Image
 
     def run(
         self,
@@ -139,8 +192,52 @@ class PillowCombineMethod(BaseCombineMethod):
         target_width,
         target_height,
     ):
-        # TODO
-        raise NotImplementedError()
+        from PIL import Image
+
+        src_files = find_crop_images_in_dir(directory)
+        src_files = sort_crops_paths_topleft_rowcolumn(src_files)
+        column_number, row_number = get_grid_size(src_files)
+
+        src_ext = os.path.splitext(src_files[0])[1]
+        dst_file = os.path.join(directory, "{}{}".format(combined_filename, src_ext))
+
+        images = [Image.open(filepath) for filepath in src_files]
+        # XXX: assume all crops have the same size
+        tile_size = images[0].size
+
+        # XXX: we use an existing image for our new image so we preserve metadata
+        combined_image = Image.open(src_files[0])
+        buffer_image = Image.new(
+            mode=combined_image.mode, size=(target_width, target_height)
+        )
+        # XXX: part of the hack to preserve metadata, we do that because image.resize sucks
+        #  and doesn't return an exact copy of the initial instance
+        combined_image.im = buffer_image.im
+        combined_image._size = buffer_image._size
+        image_index = 0
+
+        for column_index in range(column_number):
+            for row_index in range(row_number):
+                image = images[image_index]
+                image_index += 1
+                coordinates = (tile_size[0] * row_index, tile_size[1] * column_index)
+                combined_image.paste(image, box=coordinates)
+
+        save_kwargs = {}
+        if src_ext.startswith(".jpg"):
+            save_kwargs = {
+                "quality": "keep",
+                "subsampling": "keep",
+                "qtables": "keep",
+            }
+
+        combined_image.save(fp=dst_file, **save_kwargs)
+
+        if delete_crops:
+            for src_file in src_files:
+                os.unlink(src_file)
+
+        return dst_file
 
 
 COMBINE_METHODS = [
