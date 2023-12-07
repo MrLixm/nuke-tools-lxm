@@ -249,10 +249,10 @@ COMBINE_METHODS = [
 def run():
     LOGGER.info("[run] Started.")
 
-    export_dir = nuke.thisNode()["export_directory"].getValue()  # type: str
-    combined_filename = nuke.thisNode()["combined_filename"].getValue()  # type: str
+    export_dir = nuke.thisNode()["export_directory"].evaluate()  # type: str
+    combined_filename = nuke.thisNode()["combined_filename"].evaluate()  # type: str
     delete_crops = nuke.thisNode()["delete_crops"].getValue()  # type: bool
-    oiiotool_path = nuke.thisNode()["oiiotool_path"].getValue()  # type: str
+    oiiotool_path = nuke.thisNode()["oiiotool_path"].evaluate()  # type: str
     width_source = int(nuke.thisNode()["width_source"].getValue())  # type: int
     height_source = int(nuke.thisNode()["height_source"].getValue())  # type: int
 
