@@ -63,6 +63,8 @@ You can specify the path to the oiiotool executable in 2 ways :
 > [!TIP]
 > You can find it in the Arnold render-engine installation like 
 > `C:\Program Files\Autodesk\Arnold\maya{VERSION}\bin`
+>
+> Or alternatively [get it from here](https://www.patreon.com/posts/openimageio-oiio-63609827) (has more plugin support)
 
 
 ## Pillow
