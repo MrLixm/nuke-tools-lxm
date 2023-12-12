@@ -1,0 +1,50 @@
+Group {
+ name imageCropDivide
+ tile_color 0x5c3d84ff
+ addUserKnob {20 User}
+ addUserKnob {26 header_step1 l "" T "<h2>Step1: configure</h2>"}
+ addUserKnob {3 width_max l "Width Max"}
+ width_max 1920
+ addUserKnob {3 height_max l "Height Max" -STARTLINE}
+ height_max 1080
+ addUserKnob {3 width_source l "Width Source"}
+ width_source {{width}}
+ addUserKnob {3 height_source l "Height Source" -STARTLINE}
+ height_source {{height}}
+ addUserKnob {2 export_directory l "Export Directory" +STARTLINE}
+ addUserKnob {1 combined_filepath l "Combined File Path" t "without file extension" +STARTLINE}
+ addUserKnob {26 "" +STARTLINE}
+ addUserKnob {26 header_step2 l "" T "<h2>Step2: create crop nodes</h2>" +STARTLINE}
+ addUserKnob {26 spacer1 l "" T " " +STARTLINE}
+ addUserKnob {22 icd_script l "Copy Setup to ClipBoard" T "%ICD_SCRIPT%" -STARTLINE}
+ addUserKnob {26 info l "" T "press ctrl+v in the nodegraph after clicking the above" +STARTLINE}
+ addUserKnob {26 "" +STARTLINE}
+ addUserKnob {26 header_step3 l "" T "<h2>Step3: write</h2>" +STARTLINE}
+ addUserKnob {26 info_step3 l "" T "- edit the top-most write node as wished\n- unclone all the other write node\n- render all write node to disk" +STARTLINE}
+ addUserKnob {26 "" +STARTLINE}
+ addUserKnob {26 header_step4 l "" T "<h2>Step4: combine</h2>" +STARTLINE}
+ addUserKnob {26 info_step4 l "" T "Combine need external programs, it can work with:\n- oiiotool: path to .exe set in OIIOTOOL env var\n- oiiotool: path to .exe set in below knob\n- Pillow python library set in PYTHONPATH env var" +STARTLINE}
+ addUserKnob {26 spacer2 l "" T " " +STARTLINE}
+ addUserKnob {22 combine_script l "Combine From Export Directory" T "%COMBINE_SCRIPT%" -STARTLINE}
+ addUserKnob {26 header_combine l " " T "<h3>options:</h3>" +STARTLINE}
+ addUserKnob {6 delete_crops l "Delete Crops" t "Delete crops files created once the combined image is finished." +STARTLINE}
+ delete_crops true
+ addUserKnob {2 oiiotool_path l "oiiotool path" +STARTLINE}
+ addUserKnob {20 About}
+ addUserKnob {26 toolName l name T ImageCropDivide}
+ addUserKnob {26 toolVersion l version T 1.1.0}
+ addUserKnob {26 toolAuthor l author T "<a style=\"color: rgb(200,200,200);\" href=\"https://mrlixm.github.io/\">Liam Collod</a>"}
+ addUserKnob {26 toolDescription l description T "Crop an image into tiles to be written on disk, and recombine the tiles to a single image."}
+ addUserKnob {26 toolUrl l url T "<a style=\"color: rgb(200,200,200);\" href=\"https://github.com/MrLixm/Foundry_Nuke\">https://github.com/MrLixm/Foundry_Nuke</a>"}
+}
+ Input {
+  inputs 0
+  name Input1
+  xpos 0
+ }
+ Output {
+  name Output1
+  xpos 0
+  ypos 300
+ }
+end_group
