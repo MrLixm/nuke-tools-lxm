@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "foundry-nuke"
-version = "0.4.0"
+version = "0.5.0"
 description = "Collection of script & resources for Foundry's Nuke software."
 authors = ["Liam Collod <monsieurlixm@gmail.com>"]
 readme = "README.md"

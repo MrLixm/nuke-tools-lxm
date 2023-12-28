@@ -1,0 +1,47 @@
+Group {
+ name WhiteBalance
+ tile_color 0xca7c4200
+ addUserKnob {20 User}
+ addUserKnob {26 txt_title l "" T "<h1>WhiteBalance</h1>"}
+ addUserKnob {7 temperature l "temperature" t "CCT expressed in Kelvin" R 1000 15000}
+ temperature 5495
+ addUserKnob {7 tint l "tint" t "Deviation from planckian locus. Negatives are pinkish, positives are greener." R -150 150}
+ tint -13
+ addUserKnob {7 intensity l "intensity" t "Intensity of the balancing using linear interpolation." R 0.0 5.0}
+ intensity 1.0
+ addUserKnob {6 show_coefficients l "show RGB coefficients" t "Fill the input with RGB coefficients instead of white-balancing." +STARTLINE}
+ addUserKnob {20 About}
+ addUserKnob {26 toolName l name T WhiteBalance}
+ addUserKnob {26 toolVersion l version T 0.1.0}
+ addUserKnob {26 toolAuthor l author T "<a style=\"color: rgb(200,200,200);\" href=\"https://mrlixm.github.io/\">Liam Collod</a>"}
+ addUserKnob {26 toolDescription l description T "Creative white-balancing with temperature and tint control."}
+ addUserKnob {26 toolUrl l url T "<a style=\"color: rgb(200,200,200);\" href=\"https://github.com/MrLixm/Foundry_Nuke\">https://github.com/MrLixm/Foundry_Nuke</a>"}
+}
+ Input {
+  inputs 0
+  name Input1
+  xpos 0
+ }
+ BlinkScript {
+  inputs 1
+  recompileCount 2
+  ProgramGroup 1
+  KernelDescription "%BLINK_DESC%"
+  kernelSource "%BLINK_SRC%"
+  rebuild ""
+  WhiteBalance_u_temperature {{parent.temperature}}
+  WhiteBalance_u_tint {{parent.tint}}
+  WhiteBalance_u_intensity {{parent.intensity}}
+  WhiteBalance_u_show_coeffs {{parent.show_coefficients}}
+  format "2048 2048 0 0 2048 2048 1 square_2K"
+  rebuild_finalise ""
+  name WhiteBalanceBlink
+  xpos 0
+  ypos 150
+ }
+ Output {
+  name Output1
+  xpos 0
+  ypos 300
+ }
+end_group
