@@ -4,9 +4,9 @@ Group {
  addUserKnob {20 User}
  addUserKnob {26 txt_title l "" T "<h1>WhiteBalance</h1>"}
  addUserKnob {7 temperature l "temperature" t "CCT expressed in Kelvin" R 1000 15000}
- temperature 5600
+ temperature 5495
  addUserKnob {7 tint l "tint" t "Deviation from planckian locus. Negatives are pinkish, positives are greener." R -150 150}
- tint -15.5
+ tint -13
  addUserKnob {7 intensity l "intensity" t "Intensity of the balancing using linear interpolation." R 0.0 5.0}
  intensity 1.0
  addUserKnob {6 show_coefficients l "show RGB coefficients" t "Fill the input with RGB coefficients instead of white-balancing." +STARTLINE}
