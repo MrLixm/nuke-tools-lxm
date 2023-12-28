@@ -21,11 +21,11 @@ float2 convert_CCT_to_uv_Krystek1985(float CCT){
     //
     // :param CCT: in kelvin, ~[1000-15000] range
     // --[3]
-    float CCT_2 = pow(CCT,2.0);
-    float u = 0.860117757 + 1.54118254 * pow(10.0,-4.0) * CCT + 1.28641212 * pow(10.0,-7.0) * CCT_2;
-    u = u / (1.0 + 8.42420235 * pow(10.0,-4.0) * CCT + 7.08145163 * pow(10.0,-7.0) * CCT_2);
-    float v = 0.317398726 + 4.22806245 * pow(10.0,-5.0) * CCT + 4.20481691 * pow(10.0,-8.0) * CCT_2;
-    v = v / (1.0 - 2.89741816 * pow(10.0,-5.0) * CCT + 1.61456053 * pow(10.0,-7.0) * CCT_2);
+    float CCT_2 = pow(CCT,2.0f);
+    float u = 0.860117757f + 1.54118254f * pow(10.0f,-4.0f) * CCT + 1.28641212f * pow(10.0f,-7.0f) * CCT_2;
+    u = u / (1.0f + 8.42420235f * pow(10.0f,-4.0f) * CCT + 7.08145163f * pow(10.0f,-7.0f) * CCT_2);
+    float v = 0.317398726f + 4.22806245f * pow(10.0f,-5.0f) * CCT + 4.20481691f * pow(10.0f,-8.0f) * CCT_2;
+    v = v / (1.0f - 2.89741816f * pow(10.0f,-5.0f) * CCT + 1.61456053f * pow(10.0f,-7.0f) * CCT_2);
     return float2(u, v);
 }
 
@@ -40,7 +40,7 @@ float2 convert_CCT_Duv_to_xy(float CCT, float Duv){
     float du = uv0.x - uv1.x;
     float dv = uv0.y - uv1.y;
 
-    float hypothenus = sqrt(powsafe(du,2.0) + powsafe(dv,2.0));
+    float hypothenus = sqrt(powsafe(du,2.0f) + powsafe(dv,2.0f));
     float sinTheta = dv / hypothenus;
     float cosTheta = du / hypothenus;
 
@@ -48,10 +48,10 @@ float2 convert_CCT_Duv_to_xy(float CCT, float Duv){
     float v = uv0.y + Duv * cosTheta;
 
     float u_p = u;
-    float v_p = 1.5 * v;
+    float v_p = 1.5f * v;
 
-    float x = 9.0 * u_p / (6.0 * u_p - 16.0 * v_p + 12.0);
-    float y = 2.0 * v_p / (3.0 * u_p - 8.0 * v_p + 6.0);
+    float x = 9.0f * u_p / (6.0f * u_p - 16.0f * v_p + 12.0f);
+    float y = 2.0f * v_p / (3.0f * u_p - 8.0f * v_p + 6.0f);
     return float2(x, y);
 }
 
@@ -76,18 +76,18 @@ kernel WhiteBalance : ImageComputationKernel<ePixelWise>
 
     float lerp(float a1, float a2, float amount){
         // linear interpolation between 2 values
-        return (1.0 - amount) * a1 + amount * a2;
+        return (1.0f - amount) * a1 + amount * a2;
     }
 
     void process() {
 
         // 3000 is an arbitrary scale for the tint parameter to have a more UI friendly range.
         // (actually same as Adobe)
-        float2 new_white_xy = convert_CCT_Duv_to_xy(u_temperature, u_tint/3000.0);
+        float2 new_white_xy = convert_CCT_Duv_to_xy(u_temperature, u_tint/3000.0f);
 
         // --[4] normalise primary matrix algorithm but only with whitepoint
-        float Wz = 1.0 - new_white_xy.x - new_white_xy.y;
-        float3 W = float3(new_white_xy.x / new_white_xy.y, 1.0, Wz / new_white_xy.y);
+        float Wz = 1.0f - new_white_xy.x - new_white_xy.y;
+        float3 W = float3(new_white_xy.x / new_white_xy.y, 1.0f, Wz / new_white_xy.y);
 
         float4 rgba = src();
         float3 new_rgb(rgba.x, rgba.y, rgba.z);
