@@ -14,7 +14,7 @@ Group {
  addUserKnob {26 toolName l name T WhiteBalance}
  addUserKnob {26 toolVersion l version T 0.1.0}
  addUserKnob {26 toolAuthor l author T "<a style=\"color: rgb(200,200,200);\" href=\"https://mrlixm.github.io/\">Liam Collod</a>"}
- addUserKnob {26 toolDescription l description T "White-balancing with temperature and tint."}
+ addUserKnob {26 toolDescription l description T "Creative white-balancing with temperature and tint control."}
  addUserKnob {26 toolUrl l url T "<a style=\"color: rgb(200,200,200);\" href=\"https://github.com/MrLixm/Foundry_Nuke\">https://github.com/MrLixm/Foundry_Nuke</a>"}
 }
  Input {
