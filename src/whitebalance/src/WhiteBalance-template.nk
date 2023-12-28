@@ -24,7 +24,8 @@ Group {
  }
  BlinkScript {
   inputs 1
-  recompileCount 1
+  recompileCount 2
+  ProgramGroup 1
   KernelDescription "%BLINK_DESC%"
   kernelSource "%BLINK_SRC%"
   rebuild ""
