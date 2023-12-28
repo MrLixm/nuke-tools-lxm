@@ -16,6 +16,7 @@ _this table might not be always up-to-date_
 | [ocio-contrast-log](src/ocio-contrast-log)       | contrast on log encoded imagery based on the OCIO implementation           | nodes         | ![grading](https://img.shields.io/badge/grading-43896b)     |
 | [ocio-saturation](src/ocio-saturation)           | saturation with variable weights also based on OCIO implementation         | nodes         | ![grading](https://img.shields.io/badge/grading-43896b)     |
 | [hsv](src/hsv)                                   | color correction with HSV model                                            | nodes         | ![grading](https://img.shields.io/badge/grading-43896b)     |
+| [whitebalance](src/whitebalance)                 | creative white balance with temperature/tint                               | nodes, blink  | ![grading](https://img.shields.io/badge/grading-43896b)     |
 
 # Utilisation
 
