@@ -5,7 +5,7 @@
 // - [3] https://en.wikipedia.org/wiki/Planckian_locus#Approximation
 // - [4] SMPTE Recommended Practice - Derivation of Basic Television Color Equations https://ieeexplore.ieee.org/document/7291155
 
-#define ohno_deltaT float(0.01)
+#define ohno_deltaT float(1.0)
 
 
 float powsafe(float color, float power){
