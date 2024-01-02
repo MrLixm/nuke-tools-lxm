@@ -12,17 +12,18 @@ the `build.py` file.
 
 ## build-usage
 
-- take the 2 blink script at root and import them into a nuke scene
-- make sure to compile the blink script
-- add a new user `python button` knob
-- use the following code inside :
-    ```python
-    node = nuke.thisNode()
-    print(repr(node["kernelSource"].getValue()))
-    print()
-    print(repr(node["KernelDescription"].getValue()))
-    ```
-- execute the button and check the result in the Script Editor
+- In a nuke scene, create 2 Blink nodes :
+  ```
+  BlinkScript {
+   inputs 1
+   recompileCount 2
+   ProgramGroup 1
+   addUserKnob {20 User}
+   addUserKnob {22 extract_compile T "node = nuke.thisNode()\nprint(repr(node\[\"kernelSource\"].getValue()))\nprint()\nprint(repr(node\[\"KernelDescription\"].getValue()))"}
+  }
+  ```
+- import the `.blink` code into the blink script and click the `Recompile` button
+- execute the python button in the `User` tab and check the result in the Script Editor
 - copy the first line (kernelSource) and paste into a new file named :
   - `PrimariesInset.blink.src` if it was the Inset blink script
   - `PrimariesPlot.blink.src` if it was the Plot blink script
