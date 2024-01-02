@@ -11,7 +11,7 @@ class BuildPaths:
     script_presets = THIS_DIR / "PrimariesInset" / "colorspace-preset-script.py"
     assert script_presets.exists()
 
-    src_gizmo = THIS_DIR / "PrimariesInset" / "PrimariesInset.nk"
+    src_gizmo = THIS_DIR / "PrimariesInset" / "PrimariesInset-template.nk"
     assert src_gizmo.exists()
 
     src_blink_inset = THIS_DIR / "PrimariesInset.blink"
