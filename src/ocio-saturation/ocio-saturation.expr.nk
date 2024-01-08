@@ -1,6 +1,3 @@
-set cut_paste_input [stack 0]
-version 13.1 v3
-push $cut_paste_input
 Expression {
  temp_name0 L
  temp_expr0 wR*r+wG*g+wB*b
