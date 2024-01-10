@@ -1,0 +1,178 @@
+Group {
+ name ChromaLumaTweak
+ tile_color 0xca7c4200
+ addUserKnob {20 User}
+ addUserKnob {26 txt_title l "" T "<h1>ChromaLumaTweak</h1>" +STARTLINE}
+ addUserKnob {26 "" +STARTLINE}
+ addUserKnob {4 output_type l "Output Type" t "Pick which component to output." M {recombined chroma luma}}
+ addUserKnob {4 method l "method" t "Method for luminance calculation." -STARTLINE M {weights max}}
+ addUserKnob {26 "" +STARTLINE}
+ addUserKnob {26 txt_weights l "" T "<h2>Weight Method</h2> " +STARTLINE}
+ addUserKnob {26 txt_colorspace l "" +STARTLINE T "\nChange weights to correspond to the input's colorspace :\n"}
+ addUserKnob {18 weights l "weights" +STARTLINE}
+ weights {0.212639 0.71516867 0.07219231}
+ addUserKnob {20 colorspaces_grp l "Weights Presets" -STARTLINE n 1}
+ colorspaces_grp 0
+ %NODE_Presets%
+ addUserKnob {20 "" n -1}
+ addUserKnob {26 "" +STARTLINE}
+ addUserKnob {26 txt_chroma l "" T "<h2>🌈 Chroma</h2> " +STARTLINE}
+ addUserKnob {20 chroma_zone_grp l "" +STARTLINE n -2}
+ addUserKnob {20 chroma_global_grp l "global"}
+ addUserKnob {26 txt_chroma_hint l "" T "Achromatic areas have a RGB value of (1,1,1)"}
+ addUserKnob {18 chroma_gain l "gain" +STARTLINE R 0 4}
+ chroma_gain 1.0
+ addUserKnob {18 chroma_offset l "offset" +STARTLINE R -1 1}
+ chroma_offset 0.0
+ addUserKnob {18 chroma_gamma l "gamma" +STARTLINE R 0.2 4}
+ chroma_gamma 1.0
+ addUserKnob {20 chroma_low_grp l "shadows"}
+ addUserKnob {18 chroma_low_saturation l "saturation" +STARTLINE R 0 4}
+ chroma_low_saturation 1.0
+ addUserKnob {18 chroma_low_gain l "gain" +STARTLINE R 0 4}
+ chroma_low_gain 1.0
+ addUserKnob {18 chroma_low_offset l "offset" +STARTLINE R -1 1}
+ chroma_low_offset 0.0
+ addUserKnob {18 chroma_low_gamma l "gamma" +STARTLINE R 0.2 4}
+ chroma_low_gamma 1.0
+ addUserKnob {20 chroma_high_grp l "highlights"}
+ addUserKnob {18 chroma_high_saturation l "saturation" +STARTLINE R 0 4}
+ chroma_high_saturation 1.0
+ addUserKnob {18 chroma_high_gain l "gain" +STARTLINE R 0 4}
+ chroma_high_gain 1.0
+ addUserKnob {18 chroma_high_offset l "offset" +STARTLINE R -1 1}
+ chroma_high_offset 0.0
+ addUserKnob {18 chroma_high_gamma l "gamma" +STARTLINE R 0.2 4}
+ chroma_high_gamma 1.0
+ addUserKnob {20 "" n -3}
+ addUserKnob {26 "" +STARTLINE}
+ addUserKnob {26 txt_luma l "" T "<h2>🎹 Luma</h2> "}
+ addUserKnob {20 luma_zone_grp l "" +STARTLINE n -2}
+ addUserKnob {20 luma_global_grp l "global"}
+ addUserKnob {18 luma_gain l "gain" R 0 4}
+ luma_gain 1.0
+ addUserKnob {18 luma_offset l "offset" R -1 1}
+ luma_offset 0.0
+ addUserKnob {18 luma_gamma l "gamma" R 0.2 4}
+ luma_gamma 1.0
+ addUserKnob {20 "" n -3}
+ addUserKnob {26 "" +STARTLINE}
+ addUserKnob {26 "" +STARTLINE}
+ addUserKnob {20 About}
+ addUserKnob {26 toolName l name T ChromaLumaTweak}
+ addUserKnob {26 toolVersion l version T 0.2.0}
+ addUserKnob {26 toolAuthor l author T "<a style=\"color: rgb(200,200,200);\" href=\"https://mrlixm.github.io/\">Liam Collod</a>"}
+ addUserKnob {26 toolDescription l description T "Edit chroma and luma in separation.."}
+ addUserKnob {26 toolUrl l url T "<a style=\"color: rgb(200,200,200);\" href=\"https://github.com/MrLixm/Foundry_Nuke\">https://github.com/MrLixm/Foundry_Nuke</a>"}
+}
+ Input {
+  inputs 0
+  name Input1
+  xpos 0
+ }
+ Dot {
+  name DotInput
+  xpos 0
+  ypos 50
+ }
+ set Nd9ce770 [stack 0]
+ %NODE_Saturation:{"name": "ExtractLuma", "xpos": -200, "ypos": 50, "saturation": 0.0, "wR": "{{parent.weights.r}}", "wG": "{{parent.weights.g}}", "wB": "{{parent.weights.b}}"}%
+ set N23344020 [stack 0]
+ push $Nd9ce770
+ Expression {
+   temp_name0 L
+   temp_expr0 max(r,g,b)
+   expr0 L
+   expr1 L
+   expr2 L
+   name ExtractLumaMax
+   xpos -100
+   ypos 50
+ }
+ push $N23344020
+ Switch {
+  inputs 2
+  name SwitchMethod
+  xpos -200
+  ypos 80
+  which {{parent.method}}
+ }
+ Shuffle2 {
+  name ShuffleRtoA
+  fromInput1 {{0} B}
+  fromInput2 {{0} B}
+  mappings "4 rgba.red 0 0 rgba.red 0 0 rgba.green 0 1 rgba.green 0 1 rgba.blue 0 2 rgba.blue 0 2 rgba.red 0 0 rgba.alpha 0 3"
+  xpos -200
+  ypos 100
+ }
+ set Nd28ed30 [stack 0]
+ Grade {
+  name GradeLuma
+  xpos -200
+  ypos 150
+  white {{parent.luma_gain.r} {parent.luma_gain.g} {parent.luma_gain.b}}
+  add {{parent.luma_offset.r} {parent.luma_offset.g} {parent.luma_offset.b}}
+  gamma {{parent.luma_gamma.r} {parent.luma_gamma.g} {parent.luma_gamma.b}}
+ }
+ Dot {
+  name DotLuma
+  xpos -200
+  ypos 300
+ }
+ push $Nd28ed30
+ push $Nd28ed30
+ push $Nd28ed30
+ push $Nd28ed30
+ push $Nd9ce770
+ push $Nd28ed30
+ Merge2 {
+  name MergeExtractChroma
+  inputs 2
+  xpos 0
+  ypos 100
+  operation divide
+  disable {{parent.output_type==2}}
+ }
+ %NODE_Saturation:{"name": "SaturationChromaLow", "xpos": 0, "ypos": 130, "wR": "{{parent.weights.r}}", "wG": "{{parent.weights.g}}", "wB": "{{parent.weights.b}}", "saturation": "{{parent.chroma_low_saturation.r} {parent.chroma_low_saturation.g} {parent.chroma_low_saturation.b}}", "inputs": "1+1", "invert_mask": "true"}%
+ %NODE_Saturation:{"name": "SaturationChromaHigh", "xpos": 0, "ypos": 150, "wR": "{{parent.weights.r}}", "wG": "{{parent.weights.g}}", "wB": "{{parent.weights.b}}", "saturation": "{{parent.chroma_low_saturation.r} {parent.chroma_low_saturation.g} {parent.chroma_low_saturation.b}}", "inputs": "1+1"}%
+ Grade {
+  name GradeChroma
+  xpos 0
+  ypos 180
+  white {{parent.chroma_gain.r} {parent.chroma_gain.g} {parent.chroma_gain.b}}
+  add {{parent.chroma_offset.r} {parent.chroma_offset.g} {parent.chroma_offset.b}}
+  gamma {{parent.chroma_gamma.r} {parent.chroma_gamma.g} {parent.chroma_gamma.b}}
+ }
+ Grade {
+  inputs 1+1
+  name GradeChromaLow
+  xpos 0
+  ypos 220
+  invert_mask true
+  white {{parent.chroma_low_gain.r} {parent.chroma_low_gain.g} {parent.chroma_low_gain.b}}
+  add {{parent.chroma_low_offset.r} {parent.chroma_low_offset.g} {parent.chroma_low_offset.b}}
+  gamma {{parent.chroma_low_gamma.r} {parent.chroma_low_gamma.g} {parent.chroma_low_gamma.b}}
+ }
+ Grade {
+  inputs 1+1
+  name GradeChromaHigh
+  xpos 0
+  ypos 260
+  white {{parent.chroma_high_gain.r} {parent.chroma_high_gain.g} {parent.chroma_high_gain.b}}
+  add {{parent.chroma_high_offset.r} {parent.chroma_high_offset.g} {parent.chroma_high_offset.b}}
+  gamma {{parent.chroma_high_gamma.r} {parent.chroma_high_gamma.g} {parent.chroma_high_gamma.b}}
+ }
+ Merge2 {
+  name MergeLuma
+  inputs 2
+  xpos 0
+  ypos 300
+  operation multiply
+  disable {{parent.output_type!=0}}
+ }
+ Output {
+  name Output1
+  xpos 0
+  ypos 350
+ }
+end_group
