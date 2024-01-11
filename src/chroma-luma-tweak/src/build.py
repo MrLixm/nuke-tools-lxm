@@ -26,6 +26,17 @@ class BuildPaths:
     build_gizmo = build_dir / "ChromaLumaTweak.nk"
 
 
+def _get_BT2020_10deg_primaries() -> numpy.ndarray:
+    # reference: Troy Sobotka
+    BT2020_spectral = numpy.array([630, 532, 467])
+    BT2020_XYZ_CIE_2012_10d = colour.MSDS_CMFS["CIE 2012 10 Degree Standard Observer"][
+        BT2020_spectral
+    ]
+    BT2020_xyY_CIE_2012_10d = colour.XYZ_to_xyY(BT2020_XYZ_CIE_2012_10d)
+    BT2020_primaries_CIE_2012_10d = BT2020_xyY_CIE_2012_10d[..., 0:2]
+    return BT2020_primaries_CIE_2012_10d
+
+
 def get_colorspace_preset() -> str:
     COLORSPACES = {
         "sRGB (native)": ("sRGB", None),
@@ -35,6 +46,7 @@ def get_colorspace_preset() -> str:
         "ACEScg (native)": ("ACEScg", None),
         "ACES2065-1 (native)": ("ACES2065-1", None),
         "BT.2020 (native)": ("ITU-R BT.2020", None),
+        "BT.2020 CIE 2012 10degrees (D65)": (_get_BT2020_10deg_primaries(), "D65"),
         "FilmLight E-Gamut (native)": ("FilmLight E-Gamut", None),
         "ARRI Wide Gamut 3 (native)": ("ARRI Wide Gamut 3", None),
         "ARRI Wide Gamut 4 (native)": ("ARRI Wide Gamut 4", None),
@@ -45,27 +57,45 @@ def get_colorspace_preset() -> str:
 
     ILLUMINANTS = colour.CCS_ILLUMINANTS["CIE 1931 2 Degree Standard Observer"]
 
-    node = ""
+    node = []
 
     for label, colorspace_data in COLORSPACES.items():
-        colorspace_name = colorspace_data[0]
-        colorspace_whitepoint = colorspace_data[1]
+        colorspace_primaries_id = colorspace_data[0]
+        colorspace_whitepoint_id = colorspace_data[1]
 
-        colorspace: colour.RGB_Colourspace = colour.RGB_COLOURSPACES[colorspace_name]
-        if colorspace_whitepoint:
-            colorspace_whitepoint = ILLUMINANTS[colorspace_whitepoint]
+        colorspace_whitepoint = None
+
+        if colorspace_whitepoint_id:
+            colorspace_whitepoint = ILLUMINANTS[colorspace_whitepoint_id]
+
+        if isinstance(colorspace_primaries_id, str):
+            colorspace: colour.RGB_Colourspace = colour.RGB_COLOURSPACES[
+                colorspace_primaries_id
+            ]
+            colorspace_primaries = colorspace.primaries
+
+            if not colorspace_whitepoint_id:
+                colorspace_whitepoint = colorspace.whitepoint
+
+        elif isinstance(colorspace_primaries_id, numpy.ndarray):
+            colorspace_primaries = colorspace_primaries_id
+
         else:
-            colorspace_whitepoint = colorspace.whitepoint
+            raise TypeError(colorspace_primaries_id)
+
+        if colorspace_whitepoint is None:
+            raise ValueError("Unspecified whitepoint")
 
         weights = colour.normalised_primary_matrix(
-            colorspace.primaries, colorspace_whitepoint
+            colorspace_primaries,
+            colorspace_whitepoint,
         )
         weights = "({}, {}, {})".format(*numpy.ravel(weights)[3:6])
         safe_name = re.sub(r"\W", "", label)
         nuke_knob = f'addUserKnob {{22 set_{safe_name} l "{label}" +STARTLINE T "n=nuke.thisNode()[\'weights\'].setValue({weights})"}}'
-        node += nuke_knob + "\n"
+        node.append(nuke_knob)
 
-    return node.rstrip("\n")
+    return "\n".join(node).rstrip("\n")
 
 
 def _get_nuke_syntax_topnode_lines(nuke_script: list[str]) -> tuple[int, int]:
