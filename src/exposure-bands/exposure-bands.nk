@@ -1,0 +1,62 @@
+Group {
+ name ExposureBandsTest
+ xpos 0
+ ypos 0
+ tile_color 0x64899900
+ note_font_color 0xffffff00
+ addUserKnob {20 User l ExposureBandsTest}
+ addUserKnob {26 txt_exposure l "" +STARTLINE T "<h1> Exposure</h1>"}
+ addUserKnob {26 txt_exposure_2 l "" +STARTLINE T "All values in Stops."}
+ addUserKnob {26 spacing1 l "" +STARTLINE T " "}
+ addUserKnob {3 exposure_start l "start" -STARTLINE}
+ exposure_start -6
+ addUserKnob {3 exposure_end l " end" -STARTLINE}
+ exposure_end 6
+ addUserKnob {3 exposure_step l " step" -STARTLINE}
+ exposure_step 2
+ addUserKnob {26 "" +STARTLINE}
+ addUserKnob {3 _frames_number l "bands number"}
+ _frames_number {{"(exposure_end - exposure_start) / exposure_step + 1"}}
+ addUserKnob {7 _exposure l "current exposure"}
+ _exposure {{"frame >= 0 & frame <= _frames_number?exposure_start+exposure_step*frame:0"}}
+ addUserKnob {20 About}
+ addUserKnob {26 toolName l name T ExposureBandsTest}
+ addUserKnob {26 toolVersion l version T 0.1.1}
+ addUserKnob {26 toolAuthor l author T "<a style=\"color: rgb(200,200,200);\" href=\"https://mrlixm.github.io/\">Liam Collod</a>"}
+ addUserKnob {26 toolDescription l description T "Test image rendering with sucessive bands of gradually increasing exposure."}
+ addUserKnob {26 toolUrl l url T "<a style=\"color: rgb(200,200,200);\" href=\"https://github.com/MrLixm/Foundry_Nuke\">https://github.com/MrLixm/Foundry_Nuke</a>"}
+}
+ Input {
+  inputs 0
+  name image
+  xpos 0
+  ypos 0
+ }
+ EXPTool {
+  name BandExposure
+  xpos 0
+  ypos 50
+  mode Stops
+  gang false
+  red {{parent._exposure}}
+  green {{parent._exposure}}
+  blue {{parent._exposure}}
+ }
+ ContactSheet {
+  name BandsContactSheet
+  xpos 0
+  ypos 200
+  width {{width*columns}}
+  height {{height}}
+  rows 1
+  columns {{parent._frames_number}}
+  splitinputs true
+  startframe 0
+  endframe {{parent._frames_number}}
+ }
+ Output {
+  name Output1
+  xpos 0
+  ypos 350
+ }
+end_group
