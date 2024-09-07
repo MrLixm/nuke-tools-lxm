@@ -8,6 +8,7 @@ readme = "README.md"
 [tool.poetry.dependencies]
 python = ">=3.9,<3.12"
 colour-science = "0.4.3"
+types-PySide2 = "*"
 
 [tool.poetry.dev-dependencies]
 black = "*"
