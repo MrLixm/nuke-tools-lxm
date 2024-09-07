@@ -20,7 +20,7 @@ from PySide2 import QtWidgets
 from PySide2 import QtCore
 from PySide2 import QtGui
 
-APPNAME = "localorender"
+APPNAME = "LocaloRender"
 LOGGER = logging.getLogger(APPNAME)
 
 __version__ = "0.2.0"
@@ -823,26 +823,65 @@ class LocaloRenderDialog(QtWidgets.QDialog):
         self.populate()
 
 
-def open_as_dialog():
-    if nuke.thisNode() and nuke.thisNode().Class() == "Write":
-        dialog = LocaloRenderDialog(WriteNodeSelectorWidget.option_this)
-    else:
-        dialog = LocaloRenderDialog()
+class LocaloRenderPanel(nukescripts.PythonPanel):
+    identifier = "liamcollod.nuke.locallorender"
 
-    dialog.exec_()
+    def __init__(self):
+        super(LocaloRenderPanel, self).__init__(APPNAME, self.identifier)
+        if __name__ == "__main__":
+            expression = "{}()".format(self.__class__.__name__)
+        else:
+            expression = "{}.{}".format(__name__, self.__class__.__name__)
+        self.customKnob = nuke.PyCustom_Knob(APPNAME, "", expression)
+        self.addKnob(self.customKnob)
+
+    def _makeOkCancelButton(self):
+        # we override to remove their creation
+        pass
+
+    def showModalDialog(self):
+        # override to pass "Ok" by default as we override _makeOkCancelButton above
+        super(LocaloRenderPanel, self).showModalDialog("Ok")
+
+    @staticmethod
+    def makeUI():
+        """
+        This method is expected by PyCustom_Knob to return a QWidget.
+        """
+        return LocaloRenderDialog()
+
+    @classmethod
+    def register(cls):
+        """
+        Allow the panel to be created as a Custom panel from the usual Panel menu.
+        """
+
+        def add_panel():
+            return cls().addToPane()
+
+        menu = nuke.menu("Pane")
+        menu.addCommand(APPNAME.title(), add_panel)
 
 
 def open_as_panel(modal=False):
-    panel = nukescripts.registerWidgetAsPanel(
-        widget="LocaloRenderDialog",
-        name="Localorender",
-        id="liamcollod.localorender",
-        create=True,
-    )
+    """
+    Open the gui as a native nuke panel.
+
+    Args:
+        modal: True to open the windows as blocking (no click outside possible).
+    """
+    panel = LocaloRenderPanel()
     if modal:
         panel.showModalDialog()
     else:
         panel.show()
+
+
+def nukescript_showRenderDialog(*args, **kwargs):
+    """
+    Function that intend to override the nukescript function.
+    """
+    open_as_panel(modal=True)
 
 
 def configure_logging():
