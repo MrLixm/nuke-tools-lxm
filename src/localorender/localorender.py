@@ -23,7 +23,7 @@ from PySide2 import QtGui
 APPNAME = "LocaloRender"
 LOGGER = logging.getLogger(APPNAME)
 
-__version__ = "0.2.0"
+__version__ = "0.2.0.rc"
 
 
 @contextlib.contextmanager
