@@ -679,6 +679,11 @@ class LocaloRenderDialog(QtWidgets.QDialog):
         if not settings_loaded:
             self.set_defaults(node_selection_mode)
 
+    def hideEvent(self, event):
+        LOGGER.debug("saving settings;")
+        self.save_settings()
+        super(LocaloRenderDialog, self).hideEvent(event)
+
     def populate(self):
         LOGGER.info(
             "_write_nodes={} _frames={} _views={}"
