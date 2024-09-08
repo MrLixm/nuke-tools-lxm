@@ -5,7 +5,7 @@ import localorender
 import logging
 
 # install option 1.
-nukescripts.showRenderDialog = localorender.nukescript_showRenderDialog
+nukescripts.showRenderDialog = localorender.nukescript_showRenderDialog()
 
 # install option 2.
 menu = nuke.menu("Nuke").menu("Render")

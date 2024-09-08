@@ -990,11 +990,18 @@ def register_as_panel():
     menu.addCommand(APPNAME.title(), add_panel)
 
 
-def nukescript_showRenderDialog(*args, **kwargs):
+def nukescript_showRenderDialog(uibuilder=None):
     """
     Function that intend to override the nukescript function.
+
+    Args:
+        uibuilder(UiBuilder or None): optional builder to use to create the QWidget.
     """
-    open_as_panel(modal=True)
+
+    def _wrapper(*args, **kwargs):
+        open_as_panel(modal=True, uibuilder=uibuilder)
+
+    return _wrapper
 
 
 def configure_logging(level=logging.INFO):
