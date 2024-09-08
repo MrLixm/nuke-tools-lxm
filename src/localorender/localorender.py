@@ -3,6 +3,7 @@ author: liam collod
 requirement: nuke,python-2.7+
 """
 import contextlib
+import logging
 import os
 import re
 import sys
@@ -13,8 +14,7 @@ from functools import partial
 
 import nuke
 import nukescripts
-
-import logging
+import pyui
 
 from PySide2 import QtWidgets
 from PySide2 import QtCore
@@ -896,59 +896,98 @@ class LocaloRenderDialog(QtWidgets.QDialog):
             settings.clear()
 
 
-class LocaloRenderPanel(nukescripts.PythonPanel):
-    identifier = "liamcollod.nuke.locallorender"
+class UiBuilder:
+    """
+    Specify how to build a LocaloRenderDialog QWidget instance.
+    """
 
-    def __init__(self):
-        super(LocaloRenderPanel, self).__init__(APPNAME, self.identifier)
-        if __name__ == "__main__":
-            expression = "{}()".format(self.__class__.__name__)
-        else:
-            expression = "{}.{}".format(__name__, self.__class__.__name__)
-        self.customKnob = nuke.PyCustom_Knob(APPNAME, "", expression)
-        self.addKnob(self.customKnob)
+    def __init__(
+        self,
+        node_selection_mode=None,
+        lock_settings=False,
+    ):
+        self.node_selection_mode = node_selection_mode
+        self.lock_settings = lock_settings
 
-    def _makeOkCancelButton(self):
-        # we override to remove their creation
-        pass
+    def __repr__(self):
+        param_repr = "node_selection_mode={}".format(self.node_selection_mode)
+        param_repr += ",lock_settings={}".format(self.lock_settings)
+        repr_str = "{}({})".format(UiBuilder.__name__, param_repr)
+        if __name__ != "__main__":
+            repr_str = __name__ + "." + repr_str
+        return repr_str
 
-    def showModalDialog(self):
-        # override to pass "Ok" by default as we override _makeOkCancelButton above
-        super(LocaloRenderPanel, self).showModalDialog("Ok")
-
-    @staticmethod
-    def makeUI():
+    def makeUI(self):
         """
         This method is expected by PyCustom_Knob to return a QWidget.
         """
-        return LocaloRenderDialog()
-
-    @classmethod
-    def register(cls):
-        """
-        Allow the panel to be created as a Custom panel from the usual Panel menu.
-        """
-
-        def add_panel():
-            return cls().addToPane()
-
-        menu = nuke.menu("Pane")
-        menu.addCommand(APPNAME.title(), add_panel)
+        widget = LocaloRenderDialog(
+            node_selection_mode=self.node_selection_mode,
+            lock_settings=self.lock_settings,
+        )
+        return widget
 
 
-def open_as_panel(modal=False):
+class LocaloRenderPanel(pyui.Dialog):
+    """
+    Nuke wrapper for Qt and integration in its GUI.
+
+    We intentionnaly don't inherit from the common nukescripts.PythonPanel to make
+    the process more explicit.
+
+    I tried to find a way to call some code when the panel close. Suprisingly nothing works.
+    I tried overriding: __del__, destory, hide, cancel, but they are all never called.
+
+    Args:
+        uibuilder(UiBuilder or None): optional builder to use to create the QWidget
+    """
+
+    identifier = "liamcollod.nuke.localorender"
+
+    def __init__(self, uibuilder=None):
+        super(LocaloRenderPanel, self).__init__(APPNAME, self.identifier)
+
+        uibuilder = uibuilder or UiBuilder()
+        expression = repr(uibuilder)
+
+        self.__node = nuke.PanelNode()
+        self.__nkwidget = None
+        self.__custom_knob = nuke.PyCustom_Knob(APPNAME, "", expression)
+        self.__custom_knob.setFlag(nuke.NO_UNDO | nuke.NO_ANIMATION)
+        self.__node.addKnob(self.__custom_knob)
+        self.__nkwidget = self.__node.createWidget(self)
+        # add() args are based upon nukescripts.PythonPanel.create
+        self.add(self.__nkwidget, 0, 0, 1, 3)
+
+
+def open_as_panel(modal=False, uibuilder=None):
     """
     Open the gui as a native nuke panel.
 
     Args:
-        modal: True to open the windows as blocking (no click outside possible).
+        modal(bool): True to open the windows as blocking (no click outside possible).
+        uibuilder(UiBuilder or None): optional builder to use to create the QWidget
     """
     LOGGER.debug("launching GUI for {}v{}".format(APPNAME, __version__))
-    panel = LocaloRenderPanel()
+    panel = LocaloRenderPanel(uibuilder=uibuilder)
     if modal:
-        panel.showModalDialog()
+        panel.showModal()
     else:
         panel.show()
+
+
+def register_as_panel():
+    """
+    Allow the panel to be created as a Custom panel from the usual Panel menu.
+    """
+
+    def add_panel():
+        instance = LocaloRenderPanel()
+        nuke.thisPane().add(instance)
+        return instance
+
+    menu = nuke.menu("Pane")
+    menu.addCommand(APPNAME.title(), add_panel)
 
 
 def nukescript_showRenderDialog(*args, **kwargs):
