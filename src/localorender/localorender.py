@@ -2,10 +2,8 @@
 author: liam collod
 requirement: nuke,python-2.7+
 """
-import contextlib
 import logging
 import os
-import re
 import sys
 import tempfile
 import uuid
@@ -66,10 +64,6 @@ def get_write_node_paths_by_frame(write_node, frames, views):
                 paths[path] = (frame, view)
 
     return paths
-
-
-class UninitializedSetting:
-    pass
 
 
 class SvgIcons:
