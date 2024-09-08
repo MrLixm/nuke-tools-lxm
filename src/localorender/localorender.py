@@ -23,7 +23,7 @@ from PySide2 import QtGui
 APPNAME = "LocaloRender"
 LOGGER = logging.getLogger(APPNAME)
 
-__version__ = "0.2.0.rc"
+__version__ = "0.2.1.rc"
 
 
 @contextlib.contextmanager
@@ -94,6 +94,8 @@ class SvgIcons:
     def __init__(self):
         # note: we cannot use a context manager as QIcon are loaded on demand from disk.
         self._tmpdir = tempfile.mkdtemp(prefix="nuke-{}-".format(APPNAME))
+        # this will not be called if the app crash
+        QtWidgets.QApplication.instance().aboutToQuit.connect(self.clean_files)
 
         # ref: https://pictogrammers.com/library/mdi/icon/file-hidden/
         tmpfile = self._write_svg(
@@ -119,13 +121,20 @@ class SvgIcons:
         )
         self.help = QtGui.QIcon(tmpfile)
 
-    def __del__(self):
-        """
-        Remove the temporary directory when the instance is deleted.
-        """
+    def clean_files(self):
+        if not os.path.exists(self._tmpdir):
+            return
         LOGGER.debug("removing temp dir '{}'".format(self._tmpdir))
         # noinspection PyProtectedMember,PyUnresolvedReferences
         tempfile.TemporaryDirectory._rmtree(self._tmpdir)
+
+    def __del__(self):
+        """
+        Remove the temporary directory when the instance is deleted.
+
+        (I haven't found this called by nuke :/)
+        """
+        self.clean_files()
 
     def _write_svg(self, content):
         filename = uuid.uuid4().hex

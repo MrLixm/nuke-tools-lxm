@@ -38,7 +38,7 @@ The tool is compatible with:
 It was developed and tested on Nuke 15 Non-commercial on Windows.
 
 Note that the tool is writing files in your system default temporary directory,
-which are deleted on tool exit (needed for the icons in the GUI). 
+which are deleted on Nuke exit (needed for the icons in the GUI). 
 
 # installation
 
