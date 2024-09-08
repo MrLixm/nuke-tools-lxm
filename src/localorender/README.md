@@ -2,7 +2,7 @@
 
 A nuke script opening a GUI to render Write nodes to local disk.
 
-This is a tool built over the builtin nuke render dialog with various 
+This is a tool built over the builtin nuke render dialog with various
 improvements added.
 
 ![screenshot of the tool GUI in Nuke](overview.png)
@@ -27,18 +27,18 @@ Unsupported:
 
 # pre-requisites
 
-The tool is self-contained and doesn't have external dependency. It 
+The tool is self-contained and doesn't have external dependency. It
 requires PySide2 to work, but it's bundled with Nuke.
 
 The tool is compatible with:
 - python-2 and python-3
 - any operating system
-- at least Nuke, Nuke X and Nuke Non-Commercial (probably others) 
+- at least Nuke, Nuke X and Nuke Non-Commercial (probably others)
 
 It was developed and tested on Nuke 15 Non-commercial on Windows.
 
 Note that the tool is writing files in your system default temporary directory,
-which are deleted on Nuke exit (needed for the icons in the GUI). 
+which are deleted on Nuke exit (needed for the icons in the GUI).
 
 # installation
 
@@ -47,52 +47,74 @@ You can install the tool in multiple ways dependending on your preferences.
 Note that you can combine multiple installation methods if desired.
 
 For any method that rely on editing the `menu.py` you can also optionally
-add the following line: `localorender.configure_logging()` that should
-allow you to see logging message in the Script Editor.
+add the following lines: `localorender.configure_logging()` which should allow
+you to see logging message in the Script Editor.
+
+Some functions call accept an `uibuilder` argument. If the function accept
+this argument here is how to create it:
+
+```python
+uibuilder = localorender.UiBuilder(
+    # open the UI with all writes nodes loaded by default
+    node_selection_mode=localorender.WriteNodeSelectorWidget.option_all,
+    # prevent to use the Settings system
+    lock_settings=True,
+)
+```
+
 
 ## as a new menu entry
 
 - Copy [localorender.py](localorender.py) to your local nuke path (`~/.nuke`)
 - At the same location, edit the `menu.py` file (or create it):
-  - add the following content inside to open as a detached nuke panel.
-    ```python
-    import nuke
-    import localorender
-    
-    menu = nuke.menu("Nuke").menu("Render")
-    menu.addCommand("Open LocaloRender", lambda: localorender.open_as_panel(), "F8")
-    ```
-  - OR add the following content inside to open as a modal dialog.
-    ```python
-    import nuke
-    import localorender
-    
-    menu = nuke.menu("Nuke").menu("Render")
-    menu.addCommand("Open LocaloRender", lambda: localorender.open_as_panel(modal=True), "F8")
-    ```
-  - you can also change the shortcut in the above code from `F8` to what you prefer.
+    - add the following content inside to open as a detached nuke panel.
+        ```python
+        import nuke
+        import localorender
+        
+        menu = nuke.menu("Nuke").menu("Render")
+        menu.addCommand("Open LocaloRender", lambda: localorender.open_as_panel(), "F8")
+        ```
+    - OR add the following content inside to open as a modal dialog.
+        ```python
+        import nuke
+        import localorender
+        
+        menu = nuke.menu("Nuke").menu("Render")
+        menu.addCommand("Open LocaloRender", lambda: localorender.open_as_panel(modal=True), "F8")
+        ```
+    - note that `open_as_panel()` call can also take an optional `uibuilder` argument (explained above).
+    - you can also change the shortcut in the above code from `F8` to what you prefer.
 
 ## as a new pane option
 
 - Copy [localorender.py](localorender.py) to your local nuke path (`~/.nuke`)
 - At the same location, edit the `menu.py` file (or create it):
-  - add the following content inside:
-    ```python
-    import localorender
-    localorender.LocaloRenderPanel.register()
-    ```
+    - add the following content inside:
+        ```python
+        import localorender
+        localorender.register_as_panel()
+        ```
 
 ## overriding the default render dialog
 
 - Copy [localorender.py](localorender.py) to your local nuke path (`~/.nuke`)
 - At the same location, edit the `menu.py` file (or create it):
-  - add the following content inside:
-    ```python
-    import nukescripts
-    import localorender
-    
-    nukescripts.showRenderDialog = localorender.nukescript_showRenderDialog
-    ```
+    - add the following content inside:
+        ```python
+        import nukescripts
+        import localorender
+        
+        nukescripts.showRenderDialog = localorender.nukescript_showRenderDialog()
+        ```
+    - you can optionally pass an UiBuilder instance to customize how the tool open:
+        ```python
+        import nukescripts
+        import localorender
+             
+        uibuilder = ... # see documentation above
+        nukescripts.showRenderDialog = localorender.nukescript_showRenderDialog(uibuilder)
+        ```
 
 ## in a python knob
 
@@ -102,6 +124,8 @@ You can optionally edit the last line `open_as_panel()` to replace it by
 `open_as_panel(modal=True)` if you prefer a modal dialog, than a floating
 panel.
 
+The `open_as_panel` call can also take an optional `uibuilder` argument.
+
 ## code snippet
 
 You never install the tool and just copy/paste it in the script editor every time.
@@ -109,6 +133,8 @@ You never install the tool and just copy/paste it in the script editor every tim
 You can optionally edit the last line `open_as_panel()` to replace it by
 `open_as_panel(modal=True)` if you prefer a modal dialog, than a floating
 panel.
+
+The `open_as_panel` call can also take an optional `uibuilder` argument.
 
 # usage
 
@@ -120,20 +146,20 @@ If a path is not listed it will not be rendered. However, dependening on
 if you checked the "Skip Existing Frames" option, not all path listed will be
 rendered.
 
-By default the tool will have the frame range set at project level, you can 
+By default the tool will have the frame range set at project level, you can
 right click on the frame-range field to see the other presets available.
 
 
 ## settings
 
-From the top menu-bar. 
+Accesible the top menu-bar.
 
-Settings are saved in memory so you the tool can remember
+Settings save you ui configuration in memory so the tool can remember
 its configuration between sessions.
-Settings are only saved when you click the `Render` button, but you can manually
-trigger the save by clicking the corresponding option in the menu.
 
-If something get corrupted you can:
-- use the `Reset Default Settings` option in the menu
-- set the `LOCALORENDER_DISABLE_QSETTINGS` environment variable to any non-null value.
-  When the GUI is creating the settings will not be loaded.
+Settings **are disable by default** and need to be enabled if desired.
+
+Settings are only saved when you click the `Render` button or hide/close the tool,
+but you can manually trigger the save by clicking the corresponding option in the menu.
+
+If something get corrupted you can use the `Reset Default Settings` option.
