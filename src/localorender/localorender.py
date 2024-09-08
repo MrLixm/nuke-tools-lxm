@@ -23,7 +23,7 @@ from PySide2 import QtGui
 APPNAME = "LocaloRender"
 LOGGER = logging.getLogger(APPNAME)
 
-__version__ = "0.2.1.rc"
+__version__ = "0.3.0.rc"
 
 
 @contextlib.contextmanager
@@ -84,6 +84,10 @@ def get_write_node_paths_by_frame(write_node, frames, views):
                     paths[path] = (frame, view)
 
     return paths
+
+
+class UninitializedSetting:
+    pass
 
 
 class SvgIcons:
@@ -418,12 +422,9 @@ class FrameRangeFieldWidget(QtWidgets.QLineEdit):
             settings(QtCore.QSettings):
         """
         settings.beginGroup("framerangeselector")
-        value = settings.value("expression", "", type=str)
-        if value:
+        if settings.contains("expression"):
+            value = settings.value("expression", type=str)
             self.setText(value)
-        else:
-            self.set_framerange_from_project()
-
         settings.endGroup()
 
 
@@ -501,12 +502,10 @@ class ViewSelectWidget(QtWidgets.QPushButton):
             settings(QtCore.QSettings):
         """
         settings.beginGroup("viewselector")
-        value = settings.value("selected", "", type=str)  # type: str | None
-        if value:
+        if settings.contains("selected"):
+            value = settings.value("selected", type=str)  # type: str
             views = value.split(",")
             self.set_selected_views(views, selected=True)
-        else:
-            self.set_first_view_selected()
         settings.endGroup()
 
 
@@ -558,11 +557,9 @@ class WriteNodeSelectorWidget(QtWidgets.QComboBox):
             settings(QtCore.QSettings):
         """
         settings.beginGroup("writenodeselector")
-        value = settings.value("selected", None, type=str)
-        if value:
+        if settings.contains("selected"):
+            value = settings.value("selected", type=str)
             self.set_current_option(value)
-        else:
-            self.set_current_option(self.option_selection)
         settings.endGroup()
 
 
@@ -570,14 +567,27 @@ class LocaloRenderDialog(QtWidgets.QDialog):
     """
     Args:
         node_selection_mode(str or None):
+        lock_settings(bool): True to disabel the QSettings system
     """
 
-    def __init__(self, node_selection_mode=None):
+    def __init__(self, node_selection_mode=None, lock_settings=False):
         super(LocaloRenderDialog, self).__init__()
         LOGGER.debug("{}({})".format(self.__class__.__name__, node_selection_mode))
+        if (
+            node_selection_mode
+            and node_selection_mode not in WriteNodeSelectorWidget.options
+        ):
+            raise ValueError(
+                "Unsuported node selection mode '{}', expected one of {}"
+                "".format(node_selection_mode, WriteNodeSelectorWidget.options)
+            )
+
         # we instance once at tree level to avoid to many IO calls
         self._icons = SvgIcons()
         self._app_settings = QtCore.QSettings("liamcollod.nuke", APPNAME)
+        self._enable_settings = False
+        if not lock_settings and self._app_settings.contains(".enabled"):
+            self._enable_settings = True
 
         self._write_nodes = []  # type: list[nuke.Node]
         self._frames = []  # type: list[int]
@@ -606,6 +616,14 @@ class LocaloRenderDialog(QtWidgets.QDialog):
 
         self._menubar.setCornerWidget(self._label_title, QtCore.Qt.Corner.TopLeftCorner)
         menu = self._menubar.addMenu("Settings")
+        menu.setDisabled(lock_settings)
+        self._settings_action = menu.addAction("Enable Settings")
+        self._settings_action.setToolTip(
+            "Enable or disable settings saving/loading when the UI is created."
+        )
+        self._settings_action.setCheckable(True)
+        self._settings_action.setChecked(self._enable_settings)  # before signal !
+        self._settings_action.triggered.connect(self._on_toggle_settings)
         menu.addAction("Reset Default Settings", self.reset_settings)
         menu.addAction("Save Current Settings", self.save_settings)
         menu = self._menubar.addMenu("Help")
@@ -657,20 +675,9 @@ class LocaloRenderDialog(QtWidgets.QDialog):
 
         # those functions are last cause need to trigger signals we just connected:
 
-        if not os.getenv("LOCALORENDER_DISABLE_QSETTINGS"):
-            self.load_settings()
-
-        if node_selection_mode:
-            if node_selection_mode not in self._node_selector.options:
-                raise ValueError(
-                    "Unsuported node selection mode '{}', expected one of {}"
-                    "".format(node_selection_mode, self._node_selector.options)
-                )
-            self._node_selector.set_current_option(node_selection_mode)
-
-    def closeEvent(self, event):
-        self.save_settings()
-        super(LocaloRenderDialog, self).closeEvent(event)
+        settings_loaded = self.load_settings()
+        if not settings_loaded:
+            self.set_defaults(node_selection_mode)
 
     def populate(self):
         LOGGER.info(
@@ -689,7 +696,18 @@ class LocaloRenderDialog(QtWidgets.QDialog):
         self._update_internal_framerange()
         self.populate()
 
+    def set_defaults(self, node_selection_mode=None):
+        self._option_proxy.setChecked(False)
+        self._option_continue_error.setChecked(False)
+        self._option_skip_existing.setChecked(False)
+        self._field_frames.set_framerange_from_project()
+        self._node_selector.set_current_option(
+            node_selection_mode or self._node_selector.option_selection
+        )
+        self._views_selector.set_first_view_selected()
+
     def launch_render(self):
+        LOGGER.debug("saving settings")
         self.save_settings()
         skip_existing = self._option_skip_existing.isChecked()
         continue_error = self._option_continue_error.isChecked()
@@ -755,7 +773,16 @@ class LocaloRenderDialog(QtWidgets.QDialog):
             nuke.critical(message)
 
     def save_settings(self):
+        if not self._enable_settings:
+            LOGGER.debug("cannot save settings: feature disabled")
+            return
+
         settings = self._app_settings
+
+        settings.setValue(".version", __version__)
+        if self._enable_settings:
+            settings.setValue(".enabled", True)
+
         self._node_selector.save_settings(settings)
         self._field_frames.save_settings(settings)
         self._views_selector.save_settings(settings)
@@ -767,7 +794,24 @@ class LocaloRenderDialog(QtWidgets.QDialog):
         settings.endGroup()
 
     def load_settings(self):
+        """
+        Returns:
+            bool: True if some settings were loaded.
+        """
+        if not self._enable_settings:
+            LOGGER.debug("cannot load settings: feature disabled")
+            return False
+
         settings = self._app_settings
+        if not settings.allKeys():
+            return False
+
+        version = settings.value(".version", None)  # type: str | None
+        if version != __version__:
+            LOGGER.debug("found old settings version '{}': clearing".format(version))
+            settings.clear()
+            return False
+
         self._node_selector.load_settings(settings)
         self._field_frames.load_settings(settings)
         self._views_selector.load_settings(settings)
@@ -778,13 +822,17 @@ class LocaloRenderDialog(QtWidgets.QDialog):
             ("continue_error", self._option_continue_error),
             ("skip_existing", self._option_skip_existing),
         ]:
-            value = settings.value(option_key, False, type=bool)
-            option.setChecked(value)
+            if settings.contains(option_key):
+                value = settings.value(option_key, type=bool)
+                option.setChecked(value)
+
         settings.endGroup()
+        return True
 
     def reset_settings(self):
+        self._settings_action.setChecked(False)
         self._app_settings.clear()
-        self.load_settings()
+        self.set_defaults()
 
     def _update_internal_framerange(self):
         try:
@@ -830,6 +878,17 @@ class LocaloRenderDialog(QtWidgets.QDialog):
         selection = self._node_selector.get_selected_nodes()
         self._write_nodes = selection
         self.populate()
+
+    @QtCore.Slot()
+    def _on_toggle_settings(self):
+        self._enable_settings = self._settings_action.isChecked()
+        settings = self._app_settings
+        if self._enable_settings:
+            LOGGER.debug("enabling (and saving) settings")
+            self.save_settings()
+        else:
+            LOGGER.debug("disabling (and clearing) settings")
+            settings.clear()
 
 
 class LocaloRenderPanel(nukescripts.PythonPanel):
