@@ -66,6 +66,11 @@ def get_write_node_paths_by_frame(write_node, frames, views):
     return paths
 
 
+"""_____________________________________________________________________________________
+QT GUI
+"""
+
+
 class SvgIcons:
     """
     We create a "hacky" system to have custom QIcon with no file dependency before the runtime.
@@ -870,6 +875,11 @@ class LocaloRenderDialog(QtWidgets.QDialog):
         else:
             LOGGER.debug("disabling (and clearing) settings")
             settings.clear()
+
+
+"""_____________________________________________________________________________________
+INSTALLATION RELATED
+"""
 
 
 class UiBuilder:
