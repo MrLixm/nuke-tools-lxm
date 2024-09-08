@@ -893,7 +893,7 @@ def nukescript_showRenderDialog(*args, **kwargs):
     open_as_panel(modal=True)
 
 
-def configure_logging():
+def configure_logging(level=logging.INFO):
     """
     Configure nuke logging if it was never done by another process.
     """
@@ -912,7 +912,7 @@ def configure_logging():
     )
     handler.setFormatter(formatter)
     logging.root.addHandler(handler)
-    logging.root.setLevel(logging.INFO)
+    logging.root.setLevel(level)
 
 
 if __name__ == "__main__":
