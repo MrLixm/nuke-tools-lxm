@@ -574,7 +574,7 @@ class LocaloRenderDialog(QtWidgets.QDialog):
 
     def __init__(self, node_selection_mode=None):
         super(LocaloRenderDialog, self).__init__()
-
+        LOGGER.debug("{}({})".format(self.__class__.__name__, node_selection_mode))
         # we instance once at tree level to avoid to many IO calls
         self._icons = SvgIcons()
         self._app_settings = QtCore.QSettings("liamcollod.nuke", APPNAME)
@@ -879,6 +879,7 @@ def open_as_panel(modal=False):
     Args:
         modal: True to open the windows as blocking (no click outside possible).
     """
+    LOGGER.debug("launching GUI for {}v{}".format(APPNAME, __version__))
     panel = LocaloRenderPanel()
     if modal:
         panel.showModalDialog()
@@ -895,24 +896,25 @@ def nukescript_showRenderDialog(*args, **kwargs):
 
 def configure_logging(level=logging.INFO):
     """
-    Configure nuke logging if it was never done by another process.
+    Configure this script logger, if root logger is not.
     """
-    if not len(logging.root.handlers) == 1:
+    if not len(logging.root.handlers) == 1 or LOGGER.handlers:
         return
     # try to check if nuke default handler that have never been set
     handler = logging.root.handlers[0]
     if handler.level != logging.NOTSET:
         return
 
-    print("configuring python logging")
+    print("[{}] configuring python logger '{}'".format(APPNAME, LOGGER.name))
     handler = logging.StreamHandler(sys.stdout)
     handler.setLevel(logging.DEBUG)
     formatter = logging.Formatter(
-        "%(levelname)-7s | %(asctime)s [%(name)s] %(message)s"
+        "%(levelname)-7s | %(asctime)s [%(name)s][%(funcName)s] %(message)s"
     )
     handler.setFormatter(formatter)
-    logging.root.addHandler(handler)
-    logging.root.setLevel(level)
+    LOGGER.addHandler(handler)
+    LOGGER.setLevel(level)
+    LOGGER.propagate = False
 
 
 if __name__ == "__main__":

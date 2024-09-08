@@ -46,6 +46,10 @@ You can install the tool in multiple ways dependending on your preferences.
 
 Note that you can combine multiple installation methods if desired.
 
+For any method that rely on editing the `menu.py` you can also optionally
+add the following line: `localorender.configure_logging()` that should
+allow you to see logging message in the Script Editor.
+
 ## as a new menu entry
 
 - Copy [localorender.py](localorender.py) to your local nuke path (`~/.nuke`)
