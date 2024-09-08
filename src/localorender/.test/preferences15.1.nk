@@ -1,0 +1,16 @@
+Preferences {
+ inputs 0
+ name Preferences
+ AutoSaveIdle 0
+ AutoSaveTime 0
+ platformPathRemaps ""
+ maxPanels 2
+ GridWidth 24
+ SnapToGrid true
+ show_grid true
+ OverlayColor 0x434343ff
+ expression_arrows false
+ link_knob_arrows false
+ clone_arrows false
+ Viewer3DControlEmulation Maya
+}

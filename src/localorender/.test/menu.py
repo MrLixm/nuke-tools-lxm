@@ -12,6 +12,6 @@ menu = nuke.menu("Nuke").menu("Render")
 menu.addCommand("Open LocaloRender", lambda: localorender.open_as_panel(), "F8")
 
 # install option 3.
-localorender.LocaloRenderPanel.register()
+localorender.register_as_panel()
 
 localorender.configure_logging(logging.DEBUG)
