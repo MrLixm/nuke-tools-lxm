@@ -15,6 +15,7 @@ improvements added.
 - Add an option to change which Write nodes are used for rendering.
 - Support regular nuke frame-range syntax.
 - Supports `#` frame tokens in paths.
+- Supports `%...d` frame tokens in paths.
 - Supports tcl expression in paths.
 - Supports `%V` and `%v` tokens in paths.
 - Can be docked in the regular Nuke interface.

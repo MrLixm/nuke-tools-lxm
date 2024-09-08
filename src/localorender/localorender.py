@@ -23,20 +23,7 @@ from PySide2 import QtGui
 APPNAME = "LocaloRender"
 LOGGER = logging.getLogger(APPNAME)
 
-__version__ = "0.3.0.rc"
-
-
-@contextlib.contextmanager
-def create_temp_knob(node, knob_class, *args, **kwargs):
-    """
-    Context to create a knob and delete it on exit.
-    """
-    knob = knob_class(*args, **kwargs)
-    node.addKnob(knob)
-    try:
-        yield knob
-    finally:
-        node.removeKnob(knob)
+__version__ = "0.4.0.rc"
 
 
 def get_write_node_paths_by_frame(write_node, frames, views):
@@ -51,37 +38,32 @@ def get_write_node_paths_by_frame(write_node, frames, views):
     Returns:
         dict[str, tuple[int, str]]:
     """
-    # noinspection PyTypeChecker
-    file_knob = write_node.knob("file")  # type: nuke.File_Knob
-    src_path = file_knob.toScript()
+    # this resolve tcl but leave view and frame tokens
+    src_path = nuke.filename(write_node)
     paths = {}  # type: dict[str, tuple[int, str]]
 
     original_views = write_node.knob("views").value().split(" ")  # type: list[str]
     # we cannot render more views than defined on the Write node
     views = [view for view in views if view in original_views]
 
-    # XXX: because file_knob.evaluate() would resolve the Tcl AND the frame token we need
-    #   to process it in 2 parts. We resolve ourselves the frames token and create a new
-    #   temp knob to resolve the potential tcl.
-    with create_temp_knob(write_node, nuke.File_Knob, "__tmprender") as tmp_knob:
-        for view in views:
-            for frame in frames:
-                iteration_path = src_path
+    for view in views:
+        for frame in frames:
+            iteration_path = src_path
+            # see : https://learn.foundry.com/nuke/11.2/content/comp_environment/stereoscopic_films/rendering_stereo_images.html
+            if "%V" in iteration_path:
+                iteration_path = iteration_path.replace("%V", view)
+            if "%v" in iteration_path:
+                iteration_path = iteration_path.replace("%v", view[0])
 
-                # see : https://learn.foundry.com/nuke/11.2/content/comp_environment/stereoscopic_films/rendering_stereo_images.html
-                if "%V" in iteration_path:
-                    iteration_path = iteration_path.replace("%V", view)
-                if "%v" in iteration_path:
-                    iteration_path = iteration_path.replace("%v", view[0])
+            try:
+                iteration_path = nukescripts.replaceHashes(iteration_path) % frame
+            except TypeError:
+                # file path probably have no frame token
+                pass
 
-                has_frames = re.search(r"(#+)", iteration_path)
-                if has_frames:
-                    iteration_path = nukescripts.replaceHashes(iteration_path) % frame
-
-                tmp_knob.setValue(iteration_path)
-                path = tmp_knob.evaluate()
-                if path not in paths:
-                    paths[path] = (frame, view)
+            path = iteration_path
+            if path not in paths:
+                paths[path] = (frame, view)
 
     return paths
 
