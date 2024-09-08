@@ -23,7 +23,7 @@ from PySide2 import QtGui
 APPNAME = "LocaloRender"
 LOGGER = logging.getLogger(APPNAME)
 
-__version__ = "0.4.0.rc"
+__version__ = "0.4.1.rc"
 
 
 def get_write_node_paths_by_frame(write_node, frames, views):
@@ -892,8 +892,8 @@ class UiBuilder:
         self.lock_settings = lock_settings
 
     def __repr__(self):
-        param_repr = "node_selection_mode={}".format(self.node_selection_mode)
-        param_repr += ",lock_settings={}".format(self.lock_settings)
+        param_repr = "node_selection_mode={!r}".format(self.node_selection_mode)
+        param_repr += ",lock_settings={!r}".format(self.lock_settings)
         repr_str = "{}({})".format(UiBuilder.__name__, param_repr)
         if __name__ != "__main__":
             repr_str = __name__ + "." + repr_str
