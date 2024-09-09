@@ -21,7 +21,7 @@ from PySide2 import QtGui
 APPNAME = "LocaloRender"
 LOGGER = logging.getLogger(APPNAME)
 
-__version__ = "0.4.1.rc"
+__version__ = "0.4.2.rc"
 
 
 def get_write_node_paths_by_frame(write_node, frames, views):
@@ -944,6 +944,20 @@ class LocaloRenderPanel(pyui.Dialog):
         self.__nkwidget = self.__node.createWidget(self)
         # add() args are based upon nukescripts.PythonPanel.create
         self.add(self.__nkwidget, 0, 0, 1, 3)
+
+    def show(self):
+        def _knob_changed_callback(widget):
+            pass
+
+        # adding a callback allow nuke to store a reference of 'self', so it is not
+        # garbage collected immediately.
+        nuke.addKnobChanged(
+            _knob_changed_callback,
+            args=self,
+            nodeClass="PanelNode",
+            node=self.__node,
+        )
+        super(LocaloRenderPanel, self).show()
 
 
 def open_as_panel(modal=False, uibuilder=None):
