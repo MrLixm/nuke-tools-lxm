@@ -1,11 +1,8 @@
 # localoRender
 
-A nuke script opening a GUI to render Write nodes to local disk.
+A Nuke tool to replace the native Render dialog for Write nodes.
 
-This is a tool built over the builtin nuke render dialog with various
-improvements added.
-
-![screenshot of the tool GUI in Nuke](overview.png)
+![screenshot of the tool GUI in Nuke](./img/cover.jpg)
 
 # features
 
@@ -24,7 +21,7 @@ improvements added.
 Unsupported:
 
 - rendering to Background
-- rendering to frame server
+- rendering to Frame Server
 
 # pre-requisites
 
@@ -61,6 +58,8 @@ uibuilder = localorender.UiBuilder(
     # prevent to use the Settings system
     lock_settings=True,
 )
+# ...
+localorender.open_as_panel(uibuilder=uibuilder)
 ```
 
 
@@ -119,7 +118,8 @@ uibuilder = localorender.UiBuilder(
 
 ## in a python knob
 
-You can create a Python knob on any node copy/paste the whole script inside.
+You can create a Python knob on any node copy/paste the whole 
+[localorender.py](localorender.py) script inside.
 
 You can optionally edit the last line `open_as_panel()` to replace it by
 `open_as_panel(modal=True)` if you prefer a modal dialog, than a floating
@@ -129,7 +129,8 @@ The `open_as_panel` call can also take an optional `uibuilder` argument.
 
 ## code snippet
 
-You never install the tool and just copy/paste it in the script editor every time.
+You never install the tool and just copy/paste [localorender.py](localorender.py)
+in the script editor every time.
 
 You can optionally edit the last line `open_as_panel()` to replace it by
 `open_as_panel(modal=True)` if you prefer a modal dialog, than a floating
@@ -142,6 +143,8 @@ The `open_as_panel` call can also take an optional `uibuilder` argument.
 The tool is used pretty much like the native nuke Render Dialog, except that
 you now see exactly what will be rendered.
 
+![screenshot of the tool GUI in Nuke](img/screenshot-overview.png)
+
 The widget with a list item display all the paths that will be rendered to disk.
 If a path is not listed it will not be rendered. However, dependening on
 if you checked the "Skip Existing Frames" option, not all path listed will be
@@ -153,7 +156,7 @@ right click on the frame-range field to see the other presets available.
 
 ## settings
 
-Accesible the top menu-bar.
+Accessible the top menu-bar.
 
 Settings save you ui configuration in memory so the tool can remember
 its configuration between sessions.
