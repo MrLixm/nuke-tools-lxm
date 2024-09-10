@@ -60,7 +60,7 @@ def get_write_node_paths_by_frame(write_node, frames, views):
                 # file path probably have no frame token
                 pass
 
-            path = iteration_path
+            path = os.path.normpath(os.path.abspath(iteration_path))
             if path not in paths:
                 paths[path] = (frame, view)
 
