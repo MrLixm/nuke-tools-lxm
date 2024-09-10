@@ -22,7 +22,7 @@ from PySide2 import QtGui
 APPNAME = "LocaloRender"
 LOGGER = logging.getLogger(APPNAME)
 
-__version__ = "0.5.0.rc"
+__version__ = "0.5.1.rc"
 
 
 def get_write_node_paths_by_frame(write_node, frames, views):
@@ -907,9 +907,7 @@ class LocaloRenderDialog(QtWidgets.QDialog):
 
     @QtCore.Slot()
     def _on_open_doc(self):
-        webbrowser.open(
-            "https://github.com/MrLixm/nuke-tools-lxm/tree/main/src/localorender"
-        )
+        webbrowser.open("https://pyco-apps.github.io/software/localorender/")
 
     @QtCore.Slot()
     def _on_report_issue(self):
