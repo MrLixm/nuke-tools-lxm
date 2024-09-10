@@ -707,6 +707,12 @@ class LocaloRenderDialog(QtWidgets.QDialog):
         self.save_settings()
         super(LocaloRenderDialog, self).hideEvent(event)
 
+    def updateValue(self):
+        """
+        This method is expected by Nuke but is useless.
+        """
+        pass
+
     def populate(self):
         LOGGER.info(
             "_write_nodes={} _frames={} _views={}"
