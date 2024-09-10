@@ -4,6 +4,7 @@ requirement: nuke,python-2.7+
 """
 import logging
 import os
+import shutil
 import sys
 import tempfile
 import uuid
@@ -21,7 +22,7 @@ from PySide2 import QtGui
 APPNAME = "LocaloRender"
 LOGGER = logging.getLogger(APPNAME)
 
-__version__ = "0.4.3.rc"
+__version__ = "0.4.4.rc"
 
 
 def get_write_node_paths_by_frame(write_node, frames, views):
@@ -64,6 +65,48 @@ def get_write_node_paths_by_frame(write_node, frames, views):
                 paths[path] = (frame, view)
 
     return paths
+
+
+def _rmtree(dir_path):
+    """
+    Recursiverly remove the given directory content.
+
+    Ensure it can handle permission issues.
+
+    Copied from ``tempfile.TemporaryDirectory._rmtree.``
+
+    Args:
+        dir_path: filesystem path to an existing directory
+    """
+
+    def onerror(func, path, exc_info):
+        if issubclass(exc_info[0], PermissionError):
+
+            def resetperms(path):
+                try:
+                    os.chflags(path, 0)
+                except AttributeError:
+                    pass
+                os.chmod(path, 0o700)
+
+            try:
+                if path != dir_path:
+                    resetperms(os.path.dirname(path))
+                resetperms(path)
+
+                try:
+                    os.unlink(path)
+                # PermissionError is raised on FreeBSD for directories
+                except (IsADirectoryError, PermissionError):
+                    _rmtree(path)
+            except FileNotFoundError:
+                pass
+        elif issubclass(exc_info[0], FileNotFoundError):
+            pass
+        else:
+            raise
+
+    shutil.rmtree(dir_path, onerror=onerror)
 
 
 """_____________________________________________________________________________________
@@ -110,8 +153,7 @@ class SvgIcons:
         if not os.path.exists(self._tmpdir):
             return
         LOGGER.debug("removing temp dir '{}'".format(self._tmpdir))
-        # noinspection PyProtectedMember,PyUnresolvedReferences
-        tempfile.TemporaryDirectory._rmtree(self._tmpdir)
+        _rmtree(self._tmpdir)
 
     def __del__(self):
         """
