@@ -22,7 +22,7 @@ from PySide2 import QtGui
 APPNAME = "LocaloRender"
 LOGGER = logging.getLogger(APPNAME)
 
-__version__ = "0.5.1.rc"
+__version__ = "1.0.0"
 
 
 def get_write_node_paths_by_frame(write_node, frames, views):
