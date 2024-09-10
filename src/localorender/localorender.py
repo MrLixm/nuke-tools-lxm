@@ -22,7 +22,7 @@ from PySide2 import QtGui
 APPNAME = "LocaloRender"
 LOGGER = logging.getLogger(APPNAME)
 
-__version__ = "0.4.4.rc"
+__version__ = "0.5.0.rc"
 
 
 def get_write_node_paths_by_frame(write_node, frames, views):
@@ -362,6 +362,12 @@ class FrameRangeFieldWidget(QtWidgets.QLineEdit):
         LOGGER.debug("setting framerange '{}' from root".format(framerange))
         self.setText(framerange)
 
+    def set_framerange_from_frame(self, frame=None):
+        if frame is None:
+            frame = nuke.frame()
+        LOGGER.debug("setting framerange to frame '{}' ".format(frame))
+        self.setText("{}-{}".format(frame, frame))
+
     def set_framerange_from_active_node(self):
         try:
             activeInput = nuke.activeViewer().activeInput()
@@ -418,6 +424,8 @@ class FrameRangeFieldWidget(QtWidgets.QLineEdit):
         menu.addSection("Presets")
         menu.addAction("project", self.set_framerange_from_project)
         menu.addAction("active viewer input", self.set_framerange_from_active_node)
+        menu.addAction("current frame", self.set_framerange_from_frame)
+        menu.addAction("frame 1", partial(self.set_framerange_from_frame, 1))
 
         for viewer_node in nuke.allNodes("Viewer", nuke.Root()):
             viewermenu = menu.addMenu(viewer_node.name())
