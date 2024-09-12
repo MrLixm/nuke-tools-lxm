@@ -22,7 +22,7 @@ from PySide2 import QtGui
 APPNAME = "LocaloRender"
 LOGGER = logging.getLogger(APPNAME)
 
-__version__ = "1.0.0"
+__version__ = "1.0.1"
 
 
 def get_write_node_paths_by_frame(write_node, frames, views):
@@ -40,6 +40,8 @@ def get_write_node_paths_by_frame(write_node, frames, views):
     # this resolve tcl but leave view and frame tokens
     src_path = nuke.filename(write_node)
     paths = {}  # type: dict[str, tuple[int, str]]
+    if not src_path:
+        return paths
 
     original_views = write_node.knob("views").value().split(" ")  # type: list[str]
     # we cannot render more views than defined on the Write node
@@ -297,6 +299,11 @@ class WriteNodesTreeWidget(QtWidgets.QTreeWidget):
 
         for write_node in write_nodes:
             paths = get_write_node_paths_by_frame(write_node, frames, views)
+            if not paths:
+                LOGGER.warning(
+                    "No paths found for node '{}'. The node path knob may be empty."
+                    "".format(write_node.name())
+                )
             for path, context in paths.items():
                 self.child_type(
                     node=write_node,
