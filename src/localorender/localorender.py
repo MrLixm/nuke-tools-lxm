@@ -15,9 +15,14 @@ import nuke
 import nukescripts
 import pyui
 
-from PySide2 import QtWidgets
-from PySide2 import QtCore
-from PySide2 import QtGui
+try:
+    from PySide2 import QtWidgets
+    from PySide2 import QtCore
+    from PySide2 import QtGui
+except ModuleNotFoundError:
+    from PySide6 import QtWidgets
+    from PySide6 import QtCore
+    from PySide6 import QtGui
 
 APPNAME = "LocaloRender"
 LOGGER = logging.getLogger(APPNAME)
@@ -254,7 +259,8 @@ class WriteNodesTreeWidget(QtWidgets.QTreeWidget):
 
     def __init__(self, icons, parent=None):
         super(WriteNodesTreeWidget, self).__init__(parent)
-
+        # alias for shorter lines
+        Qtc = QtCore.Qt
         self._icons = icons
 
         self.setColumnCount(len(self.child_type.columns))
@@ -264,23 +270,23 @@ class WriteNodesTreeWidget(QtWidgets.QTreeWidget):
         self.setRootIsDecorated(False)
         self.setItemsExpandable(False)
         # select only one row at a time
-        self.setSelectionMode(self.SingleSelection)
+        self.setSelectionMode(self.SelectionMode.SingleSelection)
         # select only rows
-        self.setSelectionBehavior(self.SelectRows)
+        self.setSelectionBehavior(self.SelectionBehavior.SelectRows)
         # remove dotted border on columns
-        self.setFocusPolicy(QtCore.Qt.NoFocus)
+        self.setFocusPolicy(Qtc.FocusPolicy.NoFocus)
 
         header = self.header()
         model = self.model()  # type: QtCore.QAbstractItemModel
-        header.setSectionResizeMode(header.Interactive)
-        header.setSortIndicator(0, QtCore.Qt.AscendingOrder)
+        header.setSectionResizeMode(header.ResizeMode.Interactive)
+        header.setSortIndicator(0, Qtc.SortOrder.AscendingOrder)
 
         for columnId, columnConfig in self.child_type.columns.items():
             columnIndex = columnConfig["index"]
             columnName = columnConfig.get("label", columnId)
-            model.setHeaderData(columnIndex, QtCore.Qt.Horizontal, columnName)
+            model.setHeaderData(columnIndex, Qtc.Orientation.Horizontal, columnName)
 
-        self.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
+        self.setContextMenuPolicy(Qtc.ContextMenuPolicy.CustomContextMenu)
 
         self.customContextMenuRequested[QtCore.QPoint].connect(self._context_menu)
 
