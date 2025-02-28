@@ -1,4 +1,4 @@
-// version 8
+// version 9
 kernel InsetPrimariesPlot : ImageComputationKernel<ePixelWise>
 {
     Image<eRead, eAccessPoint, eEdgeClamped> src;
@@ -37,7 +37,7 @@ kernel InsetPrimariesPlot : ImageComputationKernel<ePixelWise>
         defineParam(u_margins, "u_margins", 50.0f);
     }
 
-    float lerp(float a1, float a2, float amount){
+    float lxmlerp(float a1, float a2, float amount){
         // linear interpolation between 2 values
         return (1.0 - amount) * a1 + amount * a2;
     }
@@ -76,12 +76,12 @@ kernel InsetPrimariesPlot : ImageComputationKernel<ePixelWise>
         float2 new_primary_g;
         float2 new_primary_b;
 
-        new_primary_r.x = lerp(primary_r.x, whitepoint.x, inset_r);
-        new_primary_r.y = lerp(primary_r.y, whitepoint.y, inset_r);
-        new_primary_g.x = lerp(primary_g.x, whitepoint.x, inset_g);
-        new_primary_g.y = lerp(primary_g.y, whitepoint.y, inset_g);
-        new_primary_b.x = lerp(primary_b.x, whitepoint.x, inset_b);
-        new_primary_b.y = lerp(primary_b.y, whitepoint.y, inset_b);
+        new_primary_r.x = lxmlerp(primary_r.x, whitepoint.x, inset_r);
+        new_primary_r.y = lxmlerp(primary_r.y, whitepoint.y, inset_r);
+        new_primary_g.x = lxmlerp(primary_g.x, whitepoint.x, inset_g);
+        new_primary_g.y = lxmlerp(primary_g.y, whitepoint.y, inset_g);
+        new_primary_b.x = lxmlerp(primary_b.x, whitepoint.x, inset_b);
+        new_primary_b.y = lxmlerp(primary_b.y, whitepoint.y, inset_b);
 
         float3x3 out;
         out[0][0] = new_primary_r.x;
@@ -296,7 +296,7 @@ kernel InsetPrimariesPlot : ImageComputationKernel<ePixelWise>
         spectral_locus[115] = float2(0.73468998, 0.26531002);
         spectral_locus[116] = float2(0.73468995, 0.26531005);
         spectral_locus[117] = float2(0.73469004, 0.26530996);
-        // flat bottom line of the horseshoe, retrieved via manual lerp
+        // flat bottom line of the horseshoe, retrieved via manual lxmlerp
         spectral_locus[118] = float2(0.231473211, 0.031295452);
         spectral_locus[119] = float2(0.28738619200000004, 0.057297064);
         spectral_locus[120] = float2(0.343299173, 0.083298676);

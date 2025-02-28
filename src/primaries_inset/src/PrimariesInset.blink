@@ -1,4 +1,4 @@
-// version 8
+// version 9
 kernel InsetPrimaries : ImageComputationKernel<ePixelWise>
 {
     Image<eRead, eAccessPoint, eEdgeClamped> src;
@@ -23,7 +23,7 @@ kernel InsetPrimaries : ImageComputationKernel<ePixelWise>
     local:
         float pi;
 
-    float lerp(float a1, float a2, float amount){
+    float lxmlerp(float a1, float a2, float amount){
         // linear interpolation between 2 values
         return (1.0 - amount) * a1 + amount * a2;
     }
@@ -127,12 +127,12 @@ kernel InsetPrimaries : ImageComputationKernel<ePixelWise>
         float2 new_primary_g;
         float2 new_primary_b;
 
-        new_primary_r.x = lerp(primary_r.x, whitepoint.x, inset_r);
-        new_primary_r.y = lerp(primary_r.y, whitepoint.y, inset_r);
-        new_primary_g.x = lerp(primary_g.x, whitepoint.x, inset_g);
-        new_primary_g.y = lerp(primary_g.y, whitepoint.y, inset_g);
-        new_primary_b.x = lerp(primary_b.x, whitepoint.x, inset_b);
-        new_primary_b.y = lerp(primary_b.y, whitepoint.y, inset_b);
+        new_primary_r.x = lxmlerp(primary_r.x, whitepoint.x, inset_r);
+        new_primary_r.y = lxmlerp(primary_r.y, whitepoint.y, inset_r);
+        new_primary_g.x = lxmlerp(primary_g.x, whitepoint.x, inset_g);
+        new_primary_g.y = lxmlerp(primary_g.y, whitepoint.y, inset_g);
+        new_primary_b.x = lxmlerp(primary_b.x, whitepoint.x, inset_b);
+        new_primary_b.y = lxmlerp(primary_b.y, whitepoint.y, inset_b);
 
         float3x3 out;
         out[0][0] = new_primary_r.x;
