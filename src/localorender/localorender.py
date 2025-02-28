@@ -27,7 +27,7 @@ except ModuleNotFoundError:
 APPNAME = "LocaloRender"
 LOGGER = logging.getLogger(APPNAME)
 
-__version__ = "1.0.1"
+__version__ = "1.0.2"
 
 
 def get_write_node_paths_by_frame(write_node, frames, views):
