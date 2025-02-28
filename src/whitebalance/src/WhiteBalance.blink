@@ -1,4 +1,4 @@
-// version 2
+// version 3
 //
 // References :
 // - [2] Ohno, Yoshi (2014). Practical Use and Calculation of CCT and Duv. LEUKOS, 10(1), 47-55. doi:10.1080/15502724.2014.839020
@@ -74,7 +74,7 @@ kernel WhiteBalance : ImageComputationKernel<ePixelWise>
         defineParam(u_intensity, "u_intensity", 1.0f);
     }
 
-    float lerp(float a1, float a2, float amount){
+    float lxmlerp(float a1, float a2, float amount){
         // linear interpolation between 2 values
         return (1.0f - amount) * a1 + amount * a2;
     }
@@ -97,9 +97,9 @@ kernel WhiteBalance : ImageComputationKernel<ePixelWise>
             new_rgb.y = W.y;
             new_rgb.z = W.z;
         } else {
-            new_rgb.x = lerp(rgba.x, new_rgb.x * W.x, u_intensity);
-            new_rgb.y = lerp(rgba.y, new_rgb.y * W.y, u_intensity);
-            new_rgb.z = lerp(rgba.z, new_rgb.z * W.z, u_intensity);
+            new_rgb.x = lxmlerp(rgba.x, new_rgb.x * W.x, u_intensity);
+            new_rgb.y = lxmlerp(rgba.y, new_rgb.y * W.y, u_intensity);
+            new_rgb.z = lxmlerp(rgba.z, new_rgb.z * W.z, u_intensity);
         }
 
         dst() = float4(
