@@ -1,0 +1,58 @@
+// version 1
+// obtained via m = ocio.MatrixTransform.Fit(oldMin=[-12.47393, -12.47393, -12.47393, 0.0], oldMax=[4.026069, 4.026069, 4.026069, 1.0])
+// [1] AllocationTransform https://github.com/AcademySoftwareFoundation/OpenColorIO/blob/b2e88b195c1e1a82a51818e0a4aa2975e03b6a88/src/OpenColorIO/ops/allocation/AllocationOp.cpp#L80
+// [2] CreateLogOp https://github.com/AcademySoftwareFoundation/OpenColorIO/blob/b2e88b195c1e1a82a51818e0a4aa2975e03b6a88/src/OpenColorIO/ops/log/LogOp.h
+// [3] Lin2LogRenderer::apply https://github.com/AcademySoftwareFoundation/OpenColorIO/blob/b2e88b195c1e1a82a51818e0a4aa2975e03b6a88/src/OpenColorIO/ops/log/LogOpCPU.cpp#L648
+// [4] CreateFitOp https://github.dev/AcademySoftwareFoundation/OpenColorIO/blob/b2e88b195c1e1a82a51818e0a4aa2975e03b6a88/src/OpenColorIO/ops/matrix/MatrixOp.cpp#L268
+// [5] MatrixTransform::Fit https://github.com/AcademySoftwareFoundation/OpenColorIO/blob/05466120f3f9c23b23778f3ccbafc4dde93abe4b/src/OpenColorIO/transforms/MatrixTransform.cpp#L162
+
+kernel OCIOAllocationTransform : ImageComputationKernel<ePixelWise>
+{
+    Image<eRead, eAccessPoint, eEdgeClamped> src;
+    Image<eWrite> dst;
+
+    param:
+        float u_range_min;
+        float u_range_max;
+        float u_offset;
+
+    void define(){
+        defineParam(u_range_min, "range min", -10.0f);
+        defineParam(u_range_max, "range max", 6.5f);
+        defineParam(u_offset, "offset", 0.0f);
+    }
+
+    void process() {
+
+        float4 rgba = src();
+        float3 new_rgb(rgba.x, rgba.y, rgba.z);
+
+        // this is the CreateLogOp with logSlope=1;linSlope=1;linOffset=u_offset;logOffset=0;
+        // -- [2][3] (we only need to keep first ApplyAdd and ApplyLog2)
+
+        new_rgb.x = max(new_rgb.x + u_offset, 0.0f);
+        new_rgb.y = max(new_rgb.y + u_offset, 0.0f);
+        new_rgb.z = max(new_rgb.z + u_offset, 0.0f);
+
+        new_rgb.x = log2(new_rgb.x);
+        new_rgb.y = log2(new_rgb.y);
+        new_rgb.z = log2(new_rgb.z);
+
+        // this is the CreateFitOp -- [4][5]
+
+        float denom = u_range_max - u_range_min;
+        float scale_factor = 1.0f / denom;
+        float offset_factor = (-1.0f * u_range_min) / denom;
+
+        new_rgb.x = new_rgb.x * scale_factor + offset_factor;
+        new_rgb.y = new_rgb.y * scale_factor + offset_factor;
+        new_rgb.z = new_rgb.z * scale_factor + offset_factor;
+
+        dst() = float4(
+            new_rgb.x,
+            new_rgb.y,
+            new_rgb.z,
+            rgba.w
+        );
+    }
+};
