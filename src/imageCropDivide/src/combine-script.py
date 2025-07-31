@@ -6,7 +6,7 @@ import sys
 
 import nuke
 
-LOGGER = logging.getLogger(__name__)
+LOGGER = logging.getLogger("combine-script")
 
 
 class BaseCombineMethod:
@@ -260,6 +260,7 @@ def run():
         raise ValueError(
             "Invalid export directory <{}>: not found on disk.".format(export_dir)
         )
+    export_dir = os.path.abspath(export_dir)
 
     combine_instance = None
 

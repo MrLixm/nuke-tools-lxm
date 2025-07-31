@@ -13,6 +13,8 @@ Group {
  height_source {{height}}
  addUserKnob {2 export_directory l "Export Directory" +STARTLINE}
  addUserKnob {1 combined_filepath l "Combined File Path" t "without file extension" +STARTLINE}
+ addUserKnob {1 file_type l "File Type" t "as listed in Nuke's Write node" +STARTLINE}
+ file_type jpeg
  addUserKnob {26 "" +STARTLINE}
  addUserKnob {26 header_step2 l "" T "<h2>Step2: create crop nodes</h2>" +STARTLINE}
  addUserKnob {26 spacer1 l "" T " " +STARTLINE}
@@ -32,7 +34,7 @@ Group {
  addUserKnob {2 oiiotool_path l "oiiotool path" +STARTLINE}
  addUserKnob {20 About}
  addUserKnob {26 toolName l name T ImageCropDivide}
- addUserKnob {26 toolVersion l version T 1.1.0}
+ addUserKnob {26 toolVersion l version T 1.2.0}
  addUserKnob {26 toolAuthor l author T "<a style=\"color: rgb(200,200,200);\" href=\"https://mrlixm.github.io/\">Liam Collod</a>"}
  addUserKnob {26 toolDescription l description T "Crop an image into tiles to be written on disk, and recombine the tiles to a single image."}
  addUserKnob {26 toolUrl l url T "<a style=\"color: rgb(200,200,200);\" href=\"https://github.com/MrLixm/Foundry_Nuke\">https://github.com/MrLixm/Foundry_Nuke</a>"}

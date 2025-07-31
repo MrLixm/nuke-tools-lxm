@@ -170,6 +170,7 @@ def generate_nk(
     width_source,
     height_source,
     node_name,
+    file_type,
 ):
     """
 
@@ -179,6 +180,7 @@ def generate_nk(
         width_source(int):
         height_source(int):
         node_name(str):
+        file_type(str):
 
     Returns:
         str: .nk formatted string representing the nodegraph
@@ -200,6 +202,7 @@ def generate_nk(
         "%METADATA_KEY%", pass_metadata_key
     )
     master_write = master_write.replace("%ICD_NODE%", node_name)
+    master_write = master_write.replace("%FILE_TYPE%", file_type)
     out += "clone node7f6100171d00|Write|21972 {}\n".format(master_write)
     out += "set {} [stack 0]\n".format(master_write_id)
 
@@ -239,6 +242,7 @@ def run():
     height_max = nuke.thisNode()["height_max"].getValue()
     width_source = nuke.thisNode()["width_source"].getValue()
     height_source = nuke.thisNode()["height_source"].getValue()
+    file_type = nuke.thisNode()["file_type"].getValue()
     node_name = nuke.thisNode().name()
 
     _check(width_max, "width_max")
@@ -252,6 +256,7 @@ def run():
         width_source=width_source,
         height_source=height_source,
         node_name=node_name,
+        file_type=file_type,
     )
     register_in_clipboard(nk_str)
 
