@@ -1,4 +1,3 @@
-import abc
 import logging
 import os
 import subprocess
@@ -7,37 +6,6 @@ import sys
 import nuke
 
 LOGGER = logging.getLogger("combine-script")
-
-
-class BaseCombineMethod:
-    name = ""
-
-    def __init__(self, *args, **kwargs):
-        if not self.name:
-            raise NotImplementedError("name attribute must be implemented")
-
-    @abc.abstractmethod
-    def run(
-        self,
-        directory,
-        combined_filepath,
-        delete_crops,
-        target_width,
-        target_height,
-    ):
-        """
-
-        Args:
-            directory(str): filesystem path to an existing directory with file inside
-            combined_filepath(str): valid filesystem file name without extension
-            delete_crops(bool): True to delete crops once combined
-            target_width(int): taregt width of the combined image
-            target_height(int): taregt height of the combined image
-
-        Returns:
-            str: filesystem path to the combined file created
-        """
-        pass
 
 
 def find_crop_images_in_dir(directory):
@@ -112,140 +80,54 @@ def get_grid_size(crop_paths):
     return mosaic_max_width, mosaic_max_height
 
 
-class OiiotoolCombineMethod(BaseCombineMethod):
-    name = "oiiotool executable"
+def oiiotool_combine(
+    oiiotool_path,
+    directory,
+    combined_filepath,
+    delete_crops,
+    target_width,
+    target_height,
+):
+    src_files = find_crop_images_in_dir(directory)
+    src_ext = os.path.splitext(src_files[0])[1]
+    if not src_files:
+        raise ValueError("Cannot find crops files to combine in {}".format(directory))
 
-    def __init__(self, oiiotool_path=None, *args, **kwargs):
-        super(OiiotoolCombineMethod, self).__init__()
-        if oiiotool_path:
-            self._oiiotool_path = oiiotool_path
-        else:
-            self._oiiotool_path = os.getenv("OIIOTOOL")
+    dst_file = combined_filepath + src_ext
 
-        if not self._oiiotool_path:
-            raise ValueError("No oiiotool path found.")
-        if not os.path.exists(self._oiiotool_path):
-            raise ValueError(
-                "Oiiotool path provide doesn't exist: {}".format(oiiotool_path)
-            )
+    src_files = sort_crops_paths_topleft_rowcolumn(src_files)
+    tiles_size = get_grid_size(src_files)
 
-    def run(
-        self,
-        directory,
-        combined_filepath,
-        delete_crops,
-        target_width,
-        target_height,
-    ):
-        src_files = find_crop_images_in_dir(directory)
-        src_ext = os.path.splitext(src_files[0])[1]
-        if not src_files:
-            raise ValueError(
-                "Cannot find crops files to combine in {}".format(directory)
-            )
+    command = [oiiotool_path]
+    command += src_files
+    # https://openimageio.readthedocs.io/en/latest/oiiotool.html#cmdoption-mosaic
+    command += ["--mosaic", "{}x{}".format(tiles_size[0], tiles_size[1])]
+    command += ["--cut", "0,0,{},{}".format(target_width - 1, target_height - 1)]
+    command += ["-i", src_files[0], "--swap", "--pastemeta"]
+    command += ["-o", dst_file]
 
-        dst_file = combined_filepath + src_ext
-
-        src_files = sort_crops_paths_topleft_rowcolumn(src_files)
-        tiles_size = get_grid_size(src_files)
-
-        command = [self._oiiotool_path]
-        command += src_files
-        # https://openimageio.readthedocs.io/en/latest/oiiotool.html#cmdoption-mosaic
-        command += ["--mosaic", "{}x{}".format(tiles_size[0], tiles_size[1])]
-        command += ["--cut", "0,0,{},{}".format(target_width - 1, target_height - 1)]
-        command += ["-i", src_files[0], "--swap", "--pastemeta"]
-        command += ["-o", dst_file]
-
-        LOGGER.info("about to call oiiotool with {}".format(command))
-        subprocess.check_call(command)
-
-        if not os.path.exists(dst_file):
-            raise RuntimeError(
-                "Unexpected issue: combined file doesn't exist on disk at <{}>"
-                "".format(dst_file)
-            )
-
-        if delete_crops:
-            for src_file in src_files:
-                os.unlink(src_file)
-
-        return dst_file
-
-
-class PillowCombineMethod(BaseCombineMethod):
-    name = "python Pillow library"
-
-    def __init__(self, *args, **kwargs):
-        super(PillowCombineMethod, self).__init__()
-        # expected to raise if PIL not available
-        from PIL import Image
-
-    def run(
-        self,
-        directory,
-        combined_filepath,
-        delete_crops,
-        target_width,
-        target_height,
-    ):
-        from PIL import Image
-
-        src_files = find_crop_images_in_dir(directory)
-        src_files = sort_crops_paths_topleft_rowcolumn(src_files)
-        column_number, row_number = get_grid_size(src_files)
-
-        src_ext = os.path.splitext(src_files[0])[1]
-        dst_file = combined_filepath + src_ext
-
-        images = [Image.open(filepath) for filepath in src_files]
-        # XXX: assume all crops have the same size
-        tile_size = images[0].size
-
-        # XXX: we use an existing image for our new image so we preserve metadata
-        combined_image = Image.open(src_files[0])
-        buffer_image = Image.new(
-            mode=combined_image.mode, size=(target_width, target_height)
+    LOGGER.info("about to call oiiotool with {}".format(command))
+    result = subprocess.run(command)
+    if result.returncode:
+        raise RuntimeError(
+            "Could not run oiiotool command; exitcode={}".format(result.returncode)
         )
-        # XXX: part of the hack to preserve metadata, we do that because image.resize sucks
-        #  and doesn't return an exact copy of the initial instance
-        combined_image.im = buffer_image.im
-        combined_image._size = buffer_image._size
-        image_index = 0
 
-        for column_index in range(column_number):
-            for row_index in range(row_number):
-                image = images[image_index]
-                image_index += 1
-                coordinates = (tile_size[0] * row_index, tile_size[1] * column_index)
-                combined_image.paste(image, box=coordinates)
+    if not os.path.exists(dst_file):
+        raise RuntimeError(
+            "Unexpected issue: combined file doesn't exist on disk at <{}>"
+            "".format(dst_file)
+        )
 
-        save_kwargs = {}
-        if src_ext.startswith(".jpg"):
-            save_kwargs = {
-                "quality": "keep",
-                "subsampling": "keep",
-                "qtables": "keep",
-            }
+    if delete_crops:
+        for src_file in src_files:
+            LOGGER.debug("unlink({})".format(src_file))
+            os.unlink(src_file)
 
-        combined_image.save(fp=dst_file, **save_kwargs)
-
-        if delete_crops:
-            for src_file in src_files:
-                os.unlink(src_file)
-
-        return dst_file
-
-
-COMBINE_METHODS = [
-    OiiotoolCombineMethod,
-    PillowCombineMethod,
-]
+    return dst_file
 
 
 def run():
-    LOGGER.info("[run] Started.")
-
     export_dir = nuke.thisNode()["export_directory"].evaluate()  # type: str
     combined_filepath = nuke.thisNode()["combined_filepath"].evaluate()  # type: str
     delete_crops = nuke.thisNode()["delete_crops"].getValue()  # type: bool
@@ -259,31 +141,26 @@ def run():
         )
     export_dir = os.path.abspath(export_dir)
 
-    combine_instance = None
-
-    for combine_method_class in COMBINE_METHODS:
-        try:
-            combine_instance = combine_method_class(oiiotool_path=oiiotool_path)
-        except Exception as error:
-            LOGGER.debug("skipping class {}: {}".format(combine_method_class, error))
-
-    if not combine_instance:
+    oiiotool_path = oiiotool_path or os.getenv("OIIOTOOL")
+    if not oiiotool_path:
         raise RuntimeError(
-            "No available method to combine the renders found. Available methods are:\n{}"
-            "\nSee documentation for details."
-            "".format([method.name for method in COMBINE_METHODS])
+            "No OIIOTOOL environment variable found; oiiotool must then be specified in the oiiotool_path knob."
         )
 
-    LOGGER.info("[run] about to combine directory {} ...".format(export_dir))
-    combined_filepath = combine_instance.run(
+    LOGGER.info(
+        "combining images from '{}' to {}x{}"
+        "".format(export_dir, width_source, height_source)
+    )
+    combined_filepath = oiiotool_combine(
+        oiiotool_path=oiiotool_path,
         directory=export_dir,
         delete_crops=delete_crops,
         combined_filepath=combined_filepath,
         target_width=width_source,
         target_height=height_source,
     )
-    nuke.message("Successfully created combine file: {}".format(combined_filepath))
-    LOGGER.info("[run] Finished.")
+    LOGGER.info("created combined image at '{}'".format(combined_filepath))
+    nuke.message("Created combined image at '{}'".format(combined_filepath))
 
 
 # remember: this modifies the root LOGGER only if it never has been before
