@@ -1,19 +1,15 @@
-[tool.poetry]
-name = "foundry-nuke"
+[project]
+name = "nuke-tools-lxm"
 version = "0.8.3"
 description = "Collection of script & resources for Foundry's Nuke software."
-authors = ["Liam Collod <monsieurlixm@gmail.com>"]
 readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "colour-science>=0.4.6",
+]
 
-[tool.poetry.dependencies]
-python = ">=3.9,<3.12"
-colour-science = "0.4.3"
-types-PySide2 = "*"
-
-[tool.poetry.dev-dependencies]
-black = "*"
-
-[build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
-
+[dependency-groups]
+dev = [
+    "black>=26.5.1",
+    "types-pyside2>=5.15.2.1.8",
+]
