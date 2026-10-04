@@ -152,12 +152,9 @@ class OiiotoolCombineMethod(BaseCombineMethod):
         command = [self._oiiotool_path]
         command += src_files
         # https://openimageio.readthedocs.io/en/latest/oiiotool.html#cmdoption-mosaic
-        # XXX: needed so hack explained under works
-        command += ["--metamerge"]
         command += ["--mosaic", "{}x{}".format(tiles_size[0], tiles_size[1])]
         command += ["--cut", "0,0,{},{}".format(target_width - 1, target_height - 1)]
-        # XXX: hack to preserve metadata that is lost with the mosaic operation
-        command += ["-i", src_files[0], "--chappend"]
+        command += ["-i", src_files[0], "--swap", "--pastemeta"]
         command += ["-o", dst_file]
 
         LOGGER.info("about to call oiiotool with {}".format(command))
