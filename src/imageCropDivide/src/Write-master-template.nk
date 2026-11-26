@@ -3,4 +3,5 @@ Write {
  ypos -100
  file "[value %ICD_NODE%.export_directory]/[metadata %METADATA_KEY%].%FILE_TYPE%"
  file_type %FILE_TYPE%
+ %KNOBS_OVERRIDES%
 }

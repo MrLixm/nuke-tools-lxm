@@ -1,7 +1,7 @@
 """
-version=4
+version=5
 author=Liam Collod
-last_modified=24/04/2022
+last_modified=30/10/2026
 python>2.7
 dependencies={
     nuke=*
@@ -16,22 +16,6 @@ Must be executed from a python button knob.
 [Use]
 
 Must be executed from a python button knob.
-
-[License]
-
-Copyright 2022 Liam Collod
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-   http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-
 """
 
 import logging
@@ -46,7 +30,6 @@ except ImportError:
     pass
 
 import nuke
-
 
 LOGGER = logging.getLogger("{}.{}".format(nuke.thisNode(), nuke.thisKnob()))
 
@@ -171,6 +154,7 @@ def generate_nk(
     height_source,
     node_name,
     file_type,
+    knobs_overrides,
 ):
     """
 
@@ -181,6 +165,7 @@ def generate_nk(
         height_source(int):
         node_name(str):
         file_type(str):
+        knobs_overrides(list[str]):
 
     Returns:
         str: .nk formatted string representing the nodegraph
@@ -203,6 +188,8 @@ def generate_nk(
     )
     master_write = master_write.replace("%ICD_NODE%", node_name)
     master_write = master_write.replace("%FILE_TYPE%", file_type)
+    knobs_overrides_str = "\n ".join(knobs_overrides)
+    master_write = master_write.replace("%KNOBS_OVERRIDES%", knobs_overrides_str)
     out += "clone node7f6100171d00|Write|21972 {}\n".format(master_write)
     out += "set {} [stack 0]\n".format(master_write_id)
 
@@ -243,6 +230,8 @@ def run():
     width_source = nuke.thisNode()["width_source"].getValue()
     height_source = nuke.thisNode()["height_source"].getValue()
     file_type = nuke.thisNode()["file_type"].getValue()
+    knobs_overrides = nuke.thisNode()["knobs_overrides"].getValue()
+    knobs_overrides = knobs_overrides.split("\n")
     node_name = nuke.thisNode().name()
 
     _check(width_max, "width_max")
@@ -257,6 +246,7 @@ def run():
         height_source=height_source,
         node_name=node_name,
         file_type=file_type,
+        knobs_overrides=knobs_overrides,
     )
     register_in_clipboard(nk_str)
 
