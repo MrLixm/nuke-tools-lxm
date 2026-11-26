@@ -103,7 +103,7 @@ def oiiotool_combine(
     # https://openimageio.readthedocs.io/en/latest/oiiotool.html#cmdoption-mosaic
     command += ["--mosaic", "{}x{}".format(tiles_size[0], tiles_size[1])]
     command += ["--cut", "0,0,{},{}".format(target_width - 1, target_height - 1)]
-    command += ["-i", src_files[0], "--swap", "--pastemeta"]
+    command += ["-i", src_files[0], "--swap", "--pastemeta", "--fullpixels"]
     command += ["-o", dst_file]
 
     LOGGER.info("about to call oiiotool with {}".format(command))
