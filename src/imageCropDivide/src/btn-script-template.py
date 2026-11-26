@@ -1,7 +1,7 @@
 """
-version=5
+version=6
 author=Liam Collod
-last_modified=30/10/2026
+last_modified=26/11/2026
 python>2.7
 dependencies={
     nuke=*
@@ -20,14 +20,17 @@ Must be executed from a python button knob.
 
 import logging
 import math
-import platform
-import subprocess
 import sys
 
 try:
     from typing import Tuple, List
 except ImportError:
     pass
+
+try:
+    from PySide6.QtWidgets import QApplication
+except ImportError:
+    from PySide2.QtWidgets import QApplication
 
 import nuke
 
@@ -134,16 +137,9 @@ def register_in_clipboard(data):
     Args:
         data(str):
     """
-
-    # Check which operating system is running to get the correct copying keyword.
-    if platform.system() == "Darwin":
-        copy_keyword = "pbcopy"
-    elif platform.system() == "Windows":
-        copy_keyword = "clip"
-    else:
-        raise OSError("Current os not supported. Only [Darwin, Windows]")
-
-    subprocess.run(copy_keyword, universal_newlines=True, input=data)
+    clipboard = QApplication.clipboard()
+    clipboard.clear(mode=clipboard.Mode.Clipboard)
+    clipboard.setText(data, mode=clipboard.Mode.Clipboard)
     return
 
 
